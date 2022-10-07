@@ -6,8 +6,6 @@ setwd("C:/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/u
 # Run R script which generates LP function
 source("1_script/0_packages_and_functions.R")
 
-df <- read_excel("2_data/hbp_data_clean.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
-
 ##########################################################
 # 2 - Set up common inputs for scenarios
 ##########################################################
@@ -151,9 +149,9 @@ colnames(summary) = c("Constraints applied", "Number of interventions with posit
                       "% of Pharmaceutical staff capacity required", "% of Lab staff capacity required",
                       "% of Mental health staff capacity required", "% of Nutrition staff capacity required")
 
-print(xtable(summary, type = "latex"), file = "3_outputs/tables/scanario_summaries.tex")
-write.csv(t(summary), file = "3_outputs/tables/scenarios_results.csv")
+print(xtable(summary, type = "latex"), file = "4_outputs/tables/scanario_summaries.tex")
+write.csv(t(summary), file = "4_outputs/tables/scenarios_results.csv")
 
 coverage_byscenario = cbind(category, intervention, scen1_coverage, scen2_coverage, scen3_coverage, scen4_coverage, scen5_coverage, scen6_coverage, scen7_coverage, scen8_coverage)
 colnames(coverage_byscenario) = c("Program", "Intervention", scenarios)
-write.csv(coverage_byscenario, file = "3_outputs/tables/scenarios_coverage_results.csv")
+write.csv(coverage_byscenario, file = "4_outputs/tables/scenarios_coverage_results.csv")

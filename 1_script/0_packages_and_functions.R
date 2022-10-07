@@ -10,7 +10,7 @@
 # 0 - Load librairies
 ##############################
 # Note the following packages need to be installed - readxl, lpSolveAPI, checkData, fmsb
-library("readxl")
+library(readxl)
 library(lpSolve)
 library(tidyverse)
 library(fmsb) # for radar chart
@@ -26,7 +26,7 @@ library(viridis) # load viridis colour palette
 ##############################
 # 1 - Set Working Directory
 ##############################
-setwd("/Users/sakshimohan/Dropbox (Personal)/York/Research Projects/Uganda EHP/Analysis")
+#setwd("/Users/sakshimohan/Dropbox (Personal)/York/Research Projects/Uganda EHP/Analysis")
 
 ###################################
 # 2 - Load and set up data for LPP
@@ -34,10 +34,10 @@ setwd("/Users/sakshimohan/Dropbox (Personal)/York/Research Projects/Uganda EHP/A
 
 # Load epi/cost/CE dataset 
 #****************************************************
-df <- read_excel("final data_11Aug21.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+df <- read_excel("2_data/hbp_data_clean.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
 # Load HR availability dataset
 #****************************************************
-df_hr <- read_excel("final data_11Aug21.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+df_hr <- read_excel("2_data/hbp_data_clean.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
 
 # Set up dataframes
 #****************************************************
@@ -55,7 +55,7 @@ colnames(df_hr) = df_hr[1,] # remove first row
 # Set up HR constraints dataframe
 #****************************************************
 hr_minutes <- df_hr$'Total patient-facing time per year (minutes)'[2:9]
-hr_size <- df_hr$'Total staff'[2:9]dev
+hr_size <- df_hr$'Total staff'[2:9]
 hr_size <- as.numeric(hr_size)
 hr_minutes <- as.numeric(hr_minutes) 
 
@@ -161,7 +161,7 @@ new_df <- data.frame(do.call(rbind, lapply(complement_subgroups,collapse)),row.n
 new_df[,5:32] <- sapply(new_df[,5:32],as.numeric) # convert data to numeric format
 
 # ^^ Browse collapsed dataframe ^^
-write.csv(new_df, file = "new_df.csv")
+write.csv(new_df, file = "3_processing/new_df.csv")
 
 # str(df) # ^^ check format of all columns ^^	
 
