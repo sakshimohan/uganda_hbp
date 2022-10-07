@@ -1,7 +1,6 @@
 #############################################################
 ## Linear Programming Function to optimize Uganda's Health Benefits Package
 ## Created by: Sakshi Mohan; 13/12/20
-## Last edited by: Sakshi Mohan; 07/10/22
 #############################################################
 
 # % Notes surrounded by "%" represent temporary code which should be substituted if a better way can be found to deal with the issue %
