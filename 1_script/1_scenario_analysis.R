@@ -38,7 +38,9 @@ subs_list = list(subs1 = c("104", "105", "106"), # First line treatment of smear
                  subs5 = c("316", "317"), # Xpert test (Full), Xpert test (targeted)**
                  subs6 = c("185", "186"), # Colorectoral cancer (screening + treatment), Colorectoral cancer (treatment)**
                  subs7 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
-                 subs8 = c("096", "097")) #  Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
+                 subs8 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
+                 subs9 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
+                 subs10 = c("229", "233")) # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 ########################################################################################################
