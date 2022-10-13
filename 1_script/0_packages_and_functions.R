@@ -249,8 +249,7 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
   }
   if (task_shifting_pharm == 0){
     print("")
-  }
-  else if (task_shifting_pharm == 1){
+  } else if (task_shifting_pharm == 1){
     medstaff <- duplicate_matrix_horizontally(reps,as.matrix(medstaff))
     nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff))
     pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)))
@@ -259,8 +258,7 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
     mentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(mentalstaff))
     nutristaff <- rbind(as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
     diagstaff <- duplicate_matrix_horizontally(reps,as.matrix(diagstaff))  
-  }
-  else{
+  } else{
     print('ERROR: tash_shifting_pharm can take values 0 or 1')
   }
   
