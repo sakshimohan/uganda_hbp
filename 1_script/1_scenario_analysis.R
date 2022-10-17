@@ -43,6 +43,10 @@ subs_list = list(subs1 = c("104", "105", "106"), # First line treatment of smear
                  subs10 = c("229", "233")) # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
+# Nested complements
+comp_nested_list = list(comp_nested1 = c("006","007","059","061","303"),
+                          comp_nested2 = c("003","004"))
+
 ########################################################################################################
 # OUTPUT 1: DALYs averted and resource use under various scenarios with constraints added incrementally
 #--------------------------------------------------------------------------------------------------------------
@@ -129,7 +133,8 @@ capture.output(
   find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, use_feasiblecov_constraint = 1, feascov_scale = 1, compcov_scale = 1,
-                       compulsory_interventions = NULL, substitutes = subs_list, task_shifting_pharm = 1)
+                       compulsory_interventions = NULL, substitutes = subs_list, complements_nested = comp_nested_list,
+                       task_shifting_pharm = 1)
 )
 scen8 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 scen8_coverage = solution

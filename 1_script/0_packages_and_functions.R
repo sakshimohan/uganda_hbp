@@ -26,7 +26,7 @@ library(viridis) # load viridis colour palette
 ##############################
 # 1 - Set Working Directory
 ##############################
-#setwd("/Users/sakshimohan/Dropbox (Personal)/York/Research Projects/Uganda EHP/Analysis")
+#setwd("C:/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/")
 
 ###################################
 # 2 - Load and set up data for LPP
@@ -169,10 +169,19 @@ write.csv(new_df, file = "3_processing/new_df.csv")
 # 3. Define optimization function
 ###################################
 #outputs of this function are - 
-find_optimal_package <- function(data.frame, objective_input, cet_input, 
-                                 drug_budget_input, drug_budget.scale,  hr.scale, 
-                                 use_feasiblecov_constraint, feascov_scale, compcov_scale, 
-                                 compulsory_interventions, substitutes, task_shifting_pharm){ # % complements %
+find_optimal_package <- function(data.frame, 
+                                 objective_input = "nethealth", 
+                                 cet_input = 161, 
+                                 drug_budget_input, 
+                                 drug_budget.scale = 1,  
+                                 hr.scale, 
+                                 use_feasiblecov_constraint = 1, 
+                                 feascov_scale = 1, 
+                                 compcov_scale = 1, 
+                                 compulsory_interventions = NULL, 
+                                 substitutes = NULL, 
+                                 complements_nested = NULL, 
+                                 task_shifting_pharm = 0){ # % complements %
   intervention <<- data.frame$intervention
   intcode <<- data.frame$intcode # list of intervention codes
   category <<- data.frame$category # program/category of intervention
@@ -353,6 +362,40 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
   }  
   cons_compulsory <<- t(cons_compulsory) 
   
+  # 5. Complementary interventions
+  # 5.1 Nested complements
+  complements_nested = complements_nested
+  comp1.count <- length(complements_nested)
+  cons_complements1.limit <<- matrix(0L, length(unlist(complements_nested)) -length(complements_nested), ncol = 1)
+  cons_complements1 <<- matrix(0L, length(unlist(complements_nested)) -length(complements_nested), ncol = n) 
+
+  print("Nested complements: Constraints added")
+  counter = 1
+  for (i in 1:comp1.count){
+    print(paste("Nested complements group", i))
+    print("------------------------------------------------------------")
+    
+    for (j in complements_nested[i]){
+  
+      base <- which(data.frame$intcode == j[1])
+      base_intervention <- data.frame$intervention[base]
+      cases_base <- cases[base]
+
+      for (k in j){
+        if (k != j[1]){ # skip the base intervention
+          a <- which(data.frame$intcode == k)
+          b <- data.frame$intervention[a]
+          print(paste("Base intervention:", base_intervention , cases_max, "Intervention: ", b, "; Code: ", k , "; (Number ",a, ")"))
+          cons_complements1[counter,base] <<- cases_base
+          cons_complements1[counter,a] <<- - cases[a]
+
+          counter = counter + 1 
+        } else{}
+      }
+    }
+  }
+  cons_complements1 <<- t(cons_complements1)
+  
   ###### % Complementary interventions code commented out for now %
   
   # # 5. Complementary interventions
@@ -441,8 +484,10 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
     cons.feascov <<- duplicate_matrix_horizontally(reps,as.matrix(cons.feascov))
     #4. Compulsory interventions
     cons_compulsory <<- duplicate_matrix_horizontally(reps,as.matrix(cons_compulsory))
+    #6. Nested complements
+    cons_complements1 <<- duplicate_matrix_horizontally(reps,as.matrix(cons_complements1))
     #6. Substitutes
-    cons_substitutes <<- duplicate_matrix_horizontally(reps,as.matrix(cons_substitutes))  
+    cons_substitutes <<- duplicate_matrix_horizontally(reps,as.matrix(cons_substitutes))
   }
   else{
     print('ERROR: task_shifting_pharm can take values 0 or 1')
@@ -455,9 +500,10 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
   print(dim(t(cons.feascov)))
   print(dim(t(cons_compulsory)))
   print(dim(t(cons_substitutes)))
-  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes)) # % cons_complements %
+  print(dim(t(cons_complements1)))
+  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements1)) # % cons_complements %
   dim(cons.mat) # (1+ 8 +128 + 128 + 1 + No. of substitutes) X 128
-  cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit) # cons_complements.limit,
+  cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements1.limit) # cons_complements.limit,
   dim(cons.mat.limit) # (1 + 8 +128 + 128 + 1 + No. of substitutes) X 1
   print(dim(cons.mat))
   print(dim(cons.mat.limit))  
@@ -466,6 +512,7 @@ find_optimal_package <- function(data.frame, objective_input, cet_input,
   cons.dir <- rep("<=",1+8+n)
   cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count))
   cons.dir <- c(cons.dir,rep("<=",length(substitutes)))
+  cons.dir <- c(cons.dir,rep(">=",length(unlist(complements_nested)) - length(complements_nested)))
   # % cons.dir <- c(cons.dir,rep("<=",length(complements))) %
   length(cons.dir)
   length(cons.dir) = dim(cons.mat.limit)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
