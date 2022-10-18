@@ -34,10 +34,10 @@ library(viridis) # load viridis colour palette
 
 # Load epi/cost/CE dataset 
 #****************************************************
-df <- read_excel("2_data/hbp_data_clean.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+df <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
 # Load HR availability dataset
 #****************************************************
-df_hr <- read_excel("2_data/hbp_data_clean.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+df_hr <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
 
 # Set up dataframes
 #****************************************************
@@ -385,7 +385,7 @@ find_optimal_package <- function(data.frame,
         if (k != j[1]){ # skip the base intervention
           a <- which(data.frame$intcode == k)
           b <- data.frame$intervention[a]
-          print(paste("Base intervention:", base_intervention , cases_max, "Intervention: ", b, "; Code: ", k , "; (Number ",a, ")"))
+          print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", b, "; Code: ", k , "; (Number ",a, ")"))
           cons_complements1[counter,base] <<- cases_base
           cons_complements1[counter,a] <<- - cases[a]
 
