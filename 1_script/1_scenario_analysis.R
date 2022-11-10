@@ -31,17 +31,16 @@ no.cet <- 9999999999
 # Currently all interventions are combined into one group pre-optimization
 
 # SUBSTITUTES #
-subs_list = list(subs1 = c("104", "105", "106"), # First line treatment of smear positive cases, Full DOTS (smear-positive, smear negative and Extrapulmonary cases), Full combination DOTS  (smear-positive, smear negative, extrapulmonary cases, MDR cases)
-                 subs2 = c("112","113"), # Viral load testing, CD4 testing - removed from the analysis
+subs_list = list(subs1 = c("112","113"), # Viral load testing, CD4 testing - removed from the analysis
                  # subs3 = c("187", "188"), # Treatment of injuries (Fracture and dislocation - reduction), Treatment of injuries (Fracture and dislocation - fixation)
-                 subs4 = c("217", "218"), # Prevention of cardiovascular disease, Prevention and treatment of cardiovascular disease
-                 subs5 = c("316", "317"), # Xpert test (Full), Xpert test (targeted)**
-                 subs6 = c("185", "186"), # Colorectoral cancer (screening + treatment), Colorectoral cancer (treatment)**
-                 subs7 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
-                 subs8 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
-                 subs9 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
-                 subs10 = c("229", "233"), # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
-                 subs11 = c("350", "351")) # Smear test at age 40 for cervical cancer detection + cancer treatment, Smear test at age 40 for cervical cancer detection + HPV vaccinations starting at age 12 + cancer treatment
+                 subs2 = c("217", "218"), # Prevention of cardiovascular disease, Prevention and treatment of cardiovascular disease
+                 subs3 c("316", "317"), # Xpert test (Full), Xpert test (targeted)**
+                 subs4 = c("185", "186"), # Colorectoral cancer (screening + treatment), Colorectoral cancer (treatment)**
+                 subs5 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
+                 subs6 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
+                 subs7 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
+                 subs8 = c("229", "233"), # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
+                 subs9 = c("350", "351")) # Smear test at age 40 for cervical cancer detection + cancer treatment, Smear test at age 40 for cervical cancer detection + HPV vaccinations starting at age 12 + cancer treatment
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 # Nested complements
