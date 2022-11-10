@@ -39,8 +39,7 @@ subs_list = list(subs1 = c("112","113"), # Viral load testing, CD4 testing - rem
                  subs5 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
                  subs6 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
                  subs7 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
-                 subs8 = c("229", "233"), # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
-                 subs9 = c("350", "351")) # Smear test at age 40 for cervical cancer detection + cancer treatment, Smear test at age 40 for cervical cancer detection + HPV vaccinations starting at age 12 + cancer treatment
+                 subs8 = c("229", "233")) # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 # Nested complements
