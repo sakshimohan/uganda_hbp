@@ -34,12 +34,11 @@ no.cet <- 9999999999
 subs_list = list(subs1 = c("112","113"), # Viral load testing, CD4 testing - removed from the analysis
                  # subs3 = c("187", "188"), # Treatment of injuries (Fracture and dislocation - reduction), Treatment of injuries (Fracture and dislocation - fixation)
                  subs2 = c("217", "218"), # Prevention of cardiovascular disease, Prevention and treatment of cardiovascular disease
-                 subs3 = c("316", "317"), # Xpert test (Full), Xpert test (targeted)**
-                 subs4 = c("185", "186"), # Colorectoral cancer (screening + treatment), Colorectoral cancer (treatment)**
-                 subs5 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
-                 subs6 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
-                 subs7 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
-                 subs8 = c("229", "233")) # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
+                 subs3 = c("185", "186"), # Colorectoral cancer (screening + treatment), Colorectoral cancer (treatment)**
+                 subs4 = c("321", "322"), # ART (Second-Line Treatment) for adults without intensive monitoring, ART (Second-Line Treatment) for adults with intensive monitoring
+                 subs5 = c("096", "097"), # Isoniazid preventive therapy for HIV+ pregnant women, Isoniazid preventive therapy for HIV+ people
+                 subs6 = c("223", "224"), # Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV, Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV
+                 subs7 = c("229", "233")) # Basic psychosocial support, advice, and follow-up (including antidepressants), Treatment of depression - antidepressants
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 # Nested complements
