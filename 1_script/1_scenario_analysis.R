@@ -45,8 +45,10 @@ subs_list = list(subs1 = c("104", "105", "106"), # First line treatment of smear
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 # Nested complements
-comp_nested_list = list(comp_nested1 = c("006","007","059","061","303"),
-                          comp_nested2 = c("003","004"))
+comp_nested_list = list(comp_nested1 = c("006","007","059","061","303"), # ANC and its complements
+                        comp_nested2 = c("003","004"), # safe abortion, post abortion care
+                        comp_nested3 = c("104", "106"), # smear positive TB, smear negative TB
+                        comp_nested4 = c("105", "106")) # Smear negative TB, MDR TB
 
 ########################################################################################################
 # OUTPUT 1: DALYs averted and resource use under various scenarios with constraints added incrementally
