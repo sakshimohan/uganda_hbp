@@ -42,10 +42,13 @@ subs_list = list(subs1 = c("112","113"), # Viral load testing, CD4 testing - rem
 # The constraint for substitutes currently is sum of coverage of substitutes <= mean (coverage); But the case numbers might be different (example targeted Xpert)
 
 # Nested complements
-comp_nested_list = list(comp_nested1 = c("006","007","059","061","303"), # ANC and its complements
+comp_nested_list1 = list(comp_nested1 = c("006","007","059","061","303"), # ANC and its complements
                         comp_nested2 = c("003","004"), # safe abortion, post abortion care
                         comp_nested3 = c("104", "106"), # smear positive TB, smear negative TB
                         comp_nested4 = c("105", "106")) # Smear negative TB, MDR TB
+
+comp_nested_list2 = list(comp_nested1 = c("003", "004", 0.05) # Safe abortion, post abortion case management
+                         ) 
 
 ########################################################################################################
 # OUTPUT 1: DALYs averted and resource use under various scenarios with constraints added incrementally
@@ -133,8 +136,8 @@ capture.output(
   find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, use_feasiblecov_constraint = 1, feascov_scale = 1, compcov_scale = 1,
-                       compulsory_interventions = NULL, substitutes = subs_list, complements_nested = comp_nested_list,
-                       task_shifting_pharm = 1)
+                       compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
+                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
 )
 scen8 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 scen8_coverage = solution
