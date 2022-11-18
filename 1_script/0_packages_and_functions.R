@@ -403,25 +403,28 @@ find_optimal_package <- function(data.frame,
   comp2.count <- length(complements_nested2)
   cons_complements2.limit <<- matrix(0L, length(complements_nested2), ncol = 1)
   cons_complements2 <<- matrix(0L, length(complements_nested2), ncol = n) 
-  print("Nested complements - version 2: Constraints added")
-  counter = 1
-  for (i in 1:comp2.count){
-    print(paste("Nested complements group - version 2 ", i))
-    print("------------------------------------------------------------")  
-    base <- which(data.frame$intcode == complements_nested2[[i]][1])
-    base_intervention <- data.frame$intervention[base]
-    cases_base <- cases[base]
-    
-    nested_intervention_location <- which(data.frame$intcode == complements_nested2[[i]][2])
-    nested_intervention <- data.frame$intervention[nested_intervention_location]
-    print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", nested_intervention, "; Code: ", complements_nested2[[1]][2] , "; (Proportion: ",as.numeric(complements_nested2[[i]][3]), ")"))
-    cons_complements2[counter,base] <<- cases_base * as.numeric(complements_nested2[[i]][3])
-    cons_complements2[counter,nested_intervention_location] <<- - cases[nested_intervention_location]
-    
-    counter = counter + 1
-  }
   
-  
+  if (comp2.count > 0){
+    print("Nested complements - version 2: Constraints added")
+    counter = 1
+    for (i in 1:comp2.count){
+      print(paste("Nested complements group - version 2 ", i))
+      print("------------------------------------------------------------")  
+      base <- which(data.frame$intcode == complements_nested2[[i]][1])
+      base_intervention <- data.frame$intervention[base]
+      cases_base <- cases[base]
+      
+      nested_intervention_location <- which(data.frame$intcode == complements_nested2[[i]][2])
+      nested_intervention <- data.frame$intervention[nested_intervention_location]
+      print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", nested_intervention, "; Code: ", complements_nested2[[1]][2] , "; (Proportion: ",as.numeric(complements_nested2[[i]][3]), ")"))
+      cons_complements2[counter,base] <<- cases_base * as.numeric(complements_nested2[[i]][3])
+      cons_complements2[counter,nested_intervention_location] <<- - cases[nested_intervention_location]
+      
+      counter = counter + 1
+    } 
+    cons_complements2 <<- t(cons_complements2)
+  }else{}
+
   ###### % Complementary interventions code commented out for now %
   
   # # 5. Complementary interventions
@@ -513,7 +516,7 @@ find_optimal_package <- function(data.frame,
     cons_compulsory <<- duplicate_matrix_horizontally(reps,as.matrix(cons_compulsory))
     #6. Nested complements
     cons_complements1 <<- duplicate_matrix_horizontally(reps,as.matrix(cons_complements1))
-    cons_complements2 <<- duplicate_matrix_horizontally(reps,as.matrix(t(cons_complements2)))
+    cons_complements2 <<- duplicate_matrix_horizontally(reps,as.matrix(cons_complements2))
     #6. Substitutes
     cons_substitutes <<- duplicate_matrix_horizontally(reps,as.matrix(cons_substitutes))
   }
