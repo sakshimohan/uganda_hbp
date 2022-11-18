@@ -62,7 +62,9 @@ capture.output(
   find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = no.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
                        hr.scale = no.hr.limit, use_feasiblecov_constraint = 0, feascov_scale = 1, compcov_scale = 1,
-                       compulsory_interventions = NULL, substitutes = subs_list, task_shifting_pharm = 0)
+                       compulsory_interventions = NULL, substitutes = subs_list, 
+                       complements_nested1 = comp_nested_list1,
+                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
 )
 drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
 scen1 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -126,7 +128,8 @@ capture.output(
   find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, use_feasiblecov_constraint = 1, feascov_scale = 1, compcov_scale = 1,
-                       compulsory_interventions = NULL, substitutes = subs_list, task_shifting_pharm = 0)
+                       compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
+                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 0)
 )
 scen7 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 scen7_coverage = solution
