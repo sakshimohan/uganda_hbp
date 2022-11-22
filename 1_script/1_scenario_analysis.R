@@ -43,7 +43,6 @@ subs_list = list(subs1 = c("112","113"), # Viral load testing, CD4 testing - rem
 
 # Nested complements
 comp_nested_list1 = list(comp_nested1 = c("006","007","059","061","303"), # ANC and its complements
-                        comp_nested2 = c("003","004"), # safe abortion, post abortion care
                         comp_nested3 = c("104", "106"), # smear positive TB, smear negative TB
                         comp_nested4 = c("105", "106")) # Smear negative TB, MDR TB
 
@@ -172,3 +171,6 @@ write.csv(t(summary), file = "4_outputs/tables/scenarios_results.csv")
 coverage_byscenario = cbind(category, intcode, intervention, scen1_coverage, scen2_coverage, scen3_coverage, scen4_coverage, scen5_coverage, scen6_coverage, scen7_coverage, scen8_coverage)
 colnames(coverage_byscenario) = c("Program", "Intervention code", "Intervention", scenarios)
 write.csv(coverage_byscenario, file = "4_outputs/tables/scenarios_coverage_results.csv")
+
+# Extract resource use and case numbers for scenario 7 and 8
+# solution_hruse, solution_drugexp
