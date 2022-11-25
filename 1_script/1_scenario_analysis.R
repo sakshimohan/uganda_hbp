@@ -169,7 +169,7 @@ summary = rbind(scen1, scen2, scen3, scen4, scen5, scen6, scen7, scen8)
 summary = cbind(scenarios, summary)
 colnames(summary) = c("Constraints applied", "Number of interventions with positive NHB", "Number of interventions in the optimal package", 
                       "Total DALYs averted", "Highest ICER in the HBP", "% of drug budget required",
-                      "% of Medical/Clinical officer capacity required", "% of Nursing staff capacity required",
+                      "% of Doctor/Clinical officer capacity required", "% of Nursing staff capacity required",
                       "% of Pharmaceutical staff capacity required", 
                       "% of Mental health staff capacity required", "% of Nutrition staff capacity required")
 
