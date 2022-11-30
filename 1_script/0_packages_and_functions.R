@@ -427,7 +427,7 @@ find_optimal_package <- function(data.frame,
       counter = counter + 1
     } 
     cons_complements2 <<- t(cons_complements2)
-  }else{}
+  }else{cons_complements2 <<- t(cons_complements2)}
 
   ###### % Complementary interventions code commented out for now %
   
