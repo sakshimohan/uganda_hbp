@@ -256,7 +256,7 @@ find_optimal_package <- function(data.frame,
   nutristaffmins.limit <<- cons_hr.limit[7]
   diagstaffmins.limit <<- cons_hr.limit[8]
   
-  reps <<- 4 # set the number of times that the matrix of interventions is duplicated
+  reps <<- 8 # set the number of times that the matrix of interventions is duplicated
   # Define a function which duplicates a matrix horizontally
   duplicate_matrix_horizontally <- function(reps, matrix){
     matrix <- do.call(rbind, replicate(reps, matrix, simplify=FALSE))
@@ -264,13 +264,13 @@ find_optimal_package <- function(data.frame,
   if (task_shifting_pharm == 0){
     print("")
   } else if (task_shifting_pharm == 1){
-    medstaff <- duplicate_matrix_horizontally(reps,as.matrix(medstaff))
-    nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff))
-    pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)))
+    nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff), as.matrix(nursingstaff + medstaff), as.matrix(nursingstaff + medstaff + pharmstaff), as.matrix(nursingstaff + nutristaff + medstaff), as.matrix(nursingstaff + nutristaff + pharmstaff + medstaff))
+    medstaff <- rbind(as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
+    pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff),  as.matrix(rep(0,N)))
     labstaff <- duplicate_matrix_horizontally(reps,as.matrix(labstaff))
     dentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(dentalstaff))
     mentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(mentalstaff))
-    nutristaff <- rbind(as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
+    nutristaff <- rbind(as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
     diagstaff <- duplicate_matrix_horizontally(reps,as.matrix(diagstaff))  
   } else{
     print('ERROR: tash_shifting_pharm can take values 0 or 1')
