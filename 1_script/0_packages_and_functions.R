@@ -329,7 +329,7 @@ find_optimal_package <- function(data.frame,
   #cons.feascov <- diag(n)
   cons.feascov <<- diag(x = cases, n, n)
   if (use_feasiblecov_constraint == 1){
-    cons.feascov.limit <<- as.matrix(maxcoverage * feascov_scale * cases) # changed the constraint on 12May (multiplied by cases)
+    cons.feascov.limit <<- as.matrix(pmin(maxcoverage * feascov_scale * cases, cases)) # changed the constraint on 12May (multiplied by cases)
   }
   else if (use_feasiblecov_constraint == 0){
     cons.feascov.limit <<- as.matrix(cases) # changed the constraint on 12May (multiplied by cases)
@@ -356,7 +356,7 @@ find_optimal_package <- function(data.frame,
       #print(paste("Compulsory intervention: ",b, "; Code: ", compulsory_interventions[i], "; Number ",a ))
       cons_compulsory[i,a] <<- cases[a]
       # CHECK THIS CHANGE MADE on 26Aug21
-      cons_compulsory.limit[i] <<- cases[a] * maxcoverage[a] * feascov_scale * compcov_scale # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
+      cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compcov_scale, cases[a]) # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
     }
     dim(cons_compulsory)
   }
@@ -471,7 +471,7 @@ find_optimal_package <- function(data.frame,
       for (k in j){
         a <- which(data.frame$intcode == k)
         if (use_feasiblecov_constraint == 1){
-          cases_max <- cases[a] * maxcoverage[a] * feascov_scale
+          cases_max <- min(cases[a] * maxcoverage[a] * feascov_scale, cases[a])
         }
         else if (use_feasiblecov_constraint == 0){
           cases_max <- cases[a]
