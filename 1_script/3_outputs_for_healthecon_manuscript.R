@@ -31,7 +31,7 @@ find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_
                                        hr.scale = base.hr, use_feasiblecov_constraint = feascov_assumption, feascov_scale = feascov_scale_assumption, compcov_scale = 1,
                                        compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
                                        complements_nested2 = comp_nested_list2, task_shifting_pharm = 0)
-summary_base = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+summary_base = cbind.data.frame(intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 optimal_coverage_base = solution
 
 # Task-shifting scenario
@@ -40,11 +40,45 @@ task_shifting_scenario  <- find_optimal_package(data.frame = chosen_df, objectiv
                                                 hr.scale = base.hr, use_feasiblecov_constraint = feascov_assumption, feascov_scale = feascov_scale_assumption, compcov_scale = 1,
                                                 compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
                                                 complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
-summary_taskshifting = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+summary_taskshifting = cbind.data.frame(intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 optimal_coverage_taskshifting = solution
 
-# STable 1: Date Summary
+# STable 1: Data Summary
 ##########################################################
+cols.num <- c('Medical Officer / Specialist','Clinical Officer / Technician',
+              'Med. Assistant', 'Nurse Officer', 'Nurse Midwife Technician',
+              'Pharmacist', 'Pharm Technician', 'Pharm Assistant',
+              'Mental Health Staff',
+              'Nutrition Staff')
+chosen_df[cols.num] <- sapply(chosen_df[cols.num],as.numeric)
+
+data <- cbind(chosen_df$category, chosen_df$intervention, 
+              chosen_df$dalys, chosen_df$fullcost, chosen_df$fullcost/chosen_df$dalys, 
+              chosen_df$cases, chosen_df$drugcost, 
+              chosen_df$'Medical Officer / Specialist' + chosen_df$'Clinical Officer / Technician',
+              chosen_df$'Med. Assistant' + chosen_df$'Nurse Officer' + chosen_df$'Nurse Midwife Technician',
+              chosen_df$'Pharmacist' + chosen_df$'Pharm Technician' + chosen_df$'Pharm Assistant',
+              chosen_df$'Mental Health Staff',
+              chosen_df$'Nutrition Staff',
+              chosen_df$maxcoverage)
+
+
+data <- data[order(data[,1],data[,2],decreasing=FALSE),]
+int_code_new <- 1:dim(chosen_df)[1]
+data <- cbind(int_code_new, data)
+
+colnames(data) <- c("No.", "Program", "Intervention", 
+                    "DALYs averted per patient (Uganda)", "Cost per case (Uganda), 2019 USD*", "ICER*",
+                    "Total number of cases in need", 
+                    "Annual consumables cost, 2019 USD",
+                    "Doctors/Clinical Officers", "Nursing staff",
+                    "Pharmaceutical staff", "Mental health staff", 
+                    "Nutrition staff",
+                    "Maximum feasible coverage (%)") 
+
+
+filename <- "4_outputs/tables/stable1_data.csv"
+write.csv(data, file = filename)
 
 # Table 2: Result Summary
 ##########################################################
@@ -142,7 +176,7 @@ capture.output(
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = no.hr.limit, use_feasiblecov_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
-                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 0)
+                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
 )
 summary_onlydrug = cbind.data.frame(intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 
@@ -152,7 +186,7 @@ capture.output(
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = no.hr.limit, use_feasiblecov_constraint = 1, feascov_scale = 1, compcov_scale = 1,
                        compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
-                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 0)
+                       complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
 )
 summary_onlydrugandfeascov = cbind.data.frame(intervention.count, dalys_averted, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 
@@ -160,7 +194,7 @@ summary_4scens = rbind(summary_base, summary_taskshifting, summary_onlydrug, sum
 summary_4scens = cbind(scenario_labels_ext, summary_4scens)
 colnames(summary_4scens) = colnames(summary) 
 
-write.csv(t(summary_4scens), file = "4_outputs/tables/stable_6_result_summary.csv")
+write.csv(t(summary_4scens), file = "4_outputs/tables/stable6_result_summary.csv")
 
 
 # Figure 1: Resource use graphs
@@ -268,3 +302,11 @@ for (task_shifting_scen in c(1,2)){
   dev.off()
 }
 
+# Figure for responses: Fully unconstrained scenario
+##########################################################
+find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = no.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
+                     hr.scale = no.hr.limit, use_feasiblecov_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                     compulsory_interventions = NULL, substitutes = subs_list, complements_nested1 = comp_nested_list1,
+                     complements_nested2 = comp_nested_list2, task_shifting_pharm = 1)
+gen_resourceuse_graphs("", "4_outputs/figures/resourceuse_noconstraints.png")
