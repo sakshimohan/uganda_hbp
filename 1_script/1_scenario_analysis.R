@@ -44,7 +44,9 @@ comp_nested_list1 = list(comp_nested1 = c("006","007","059","061","303"), # ANC 
                         comp_nested2 = c("104", "106"), # smear positive TB, smear negative TB
                         comp_nested3 = c("105", "106")) # Smear negative TB, MDR TB
 
-comp_nested_list2 = list(comp_nested1 = c("003", "004", 0.05) # Safe abortion, post abortion case management
+comp_nested_list2 = list(comp_nested1 = c("003", "004", 0.05), # Safe abortion, post abortion case management
+                         comp_nested3 = c("353", "354", 0.1765), # vaginal delivery (uncomplicated), vaginal delivery (complicated)
+                         comp_nested2 = c("353", "036", 1.1765) # Chlorhexadine for vaginal sweeping, vaginal delivery (complicated and uncomplicated)
                          ) 
 
 ########################################################################################################
