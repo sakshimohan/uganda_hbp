@@ -68,7 +68,7 @@ hr_minutes <- as.numeric(hr_minutes)
 # Rename columns
 names(df)[names(df) == 'DALYs averted per patient (Uganda)'] <- 'dalys'
 names(df)[names(df) == 'Average drugs and commodities cost (2019 USD)'] <- 'drugcost'
-names(df)[names(df) == 'Coverage_2020'] <- 'maxcoverage'
+names(df)[names(df) == 'Coverage_2024'] <- 'maxcoverage'
 names(df)[names(df) == 'Cost per case (Uganda) - 2019 USD'] <- 'fullcost'
 names(df)[names(df) == 'Intervention'] <- 'intervention'
 names(df)[names(df) == 'Cases_full_2020'] <- 'cases'
@@ -235,8 +235,8 @@ find_optimal_package <- function(data.frame,
   # Update HR constraints so that nurses, pharmacists, medical officers, etc. represent joint constraints because the HR data
   # found for Uganda was not detailed enough 
   colnames(hr_minutes_need)
-  medstaff <- hr_minutes_need[,1] + hr_minutes_need[,2] + hr_minutes_need[,3] # Medical officer + Clinical officer + Medical Assistant
-  nursingstaff <- hr_minutes_need[,4] + hr_minutes_need[,5] # Nurse officer + Nurse midwife
+  medstaff <- hr_minutes_need[,1] + hr_minutes_need[,2]   # Medical officer + Clinical officer
+  nursingstaff <- hr_minutes_need[,3] + hr_minutes_need[,4] + hr_minutes_need[,5] # Medical assistant + Nurse officer + Nurse midwife
   pharmstaff <- hr_minutes_need[,6] + hr_minutes_need[,7] + hr_minutes_need[,8] # Pharmacist + Pharmacist Technician + Pharmacist Assistant
   labstaff <- hr_minutes_need[,9] + hr_minutes_need[,10] + hr_minutes_need[,11] # Lab officer + Lab technician + Lab assistant
   # remove CHW
@@ -256,7 +256,7 @@ find_optimal_package <- function(data.frame,
   nutristaffmins.limit <<- cons_hr.limit[7]
   diagstaffmins.limit <<- cons_hr.limit[8]
   
-  reps <<- 8 # set the number of times that the matrix of interventions is duplicated
+  reps <<- 4 # set the number of times that the matrix of interventions is duplicated
   # Define a function which duplicates a matrix horizontally
   duplicate_matrix_horizontally <- function(reps, matrix){
     matrix <- do.call(rbind, replicate(reps, matrix, simplify=FALSE))
@@ -264,13 +264,13 @@ find_optimal_package <- function(data.frame,
   if (task_shifting_pharm == 0){
     print("")
   } else if (task_shifting_pharm == 1){
-    nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff), as.matrix(nursingstaff + medstaff), as.matrix(nursingstaff + medstaff + pharmstaff), as.matrix(nursingstaff + nutristaff + medstaff), as.matrix(nursingstaff + nutristaff + pharmstaff + medstaff))
-    medstaff <- rbind(as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
-    pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff),  as.matrix(rep(0,N)))
+    nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff))
+    medstaff <- rbind(as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff))
+    pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)))
     labstaff <- duplicate_matrix_horizontally(reps,as.matrix(labstaff))
     dentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(dentalstaff))
     mentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(mentalstaff))
-    nutristaff <- rbind(as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
+    nutristaff <- rbind(as.matrix(nutristaff), as.matrix(nutristaff), as.matrix(rep(0,N)), as.matrix(rep(0,N)))
     diagstaff <- duplicate_matrix_horizontally(reps,as.matrix(diagstaff))  
   } else{
     print('ERROR: tash_shifting_pharm can take values 0 or 1')
@@ -373,7 +373,7 @@ find_optimal_package <- function(data.frame,
   comp1.count <- length(complements_nested1)
   cons_complements1.limit <<- matrix(0L, length(unlist(complements_nested1)) -length(complements_nested1), ncol = 1)
   cons_complements1 <<- matrix(0L, length(unlist(complements_nested1)) -length(complements_nested1), ncol = n) 
-
+  
   print("Nested complements: Constraints added")
   counter = 1
   for (i in 1:comp1.count){
@@ -381,11 +381,11 @@ find_optimal_package <- function(data.frame,
     print("------------------------------------------------------------")
     
     for (j in complements_nested1[i]){
-  
+      
       base <- which(data.frame$intcode == j[1])
       base_intervention <- data.frame$intervention[base]
       cases_base <- cases[base]
-
+      
       for (k in j){
         if (k != j[1]){ # skip the base intervention
           a <- which(data.frame$intcode == k)
@@ -393,7 +393,7 @@ find_optimal_package <- function(data.frame,
           print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", b, "; Code: ", k , "; (Number ",a, ")"))
           cons_complements1[counter,base] <<- cases_base
           cons_complements1[counter,a] <<- - cases[a]
-
+          
           counter = counter + 1 
         } else{}
       }
@@ -428,7 +428,7 @@ find_optimal_package <- function(data.frame,
     } 
     cons_complements2 <<- t(cons_complements2)
   }else{cons_complements2 <<- t(cons_complements2)}
-
+  
   ###### % Complementary interventions code commented out for now %
   
   # # 5. Complementary interventions
