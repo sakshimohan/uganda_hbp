@@ -13,7 +13,7 @@
 ##############################
 # 0 - Load librairies
 ##############################
-# Note the following packages need to be installed - readxl, lpSolveAPI, checkData, fmsb
+# Note the following packages need to be installed  readxl, lpSolveAPI, checkData, fmsb
 library(readxl)
 library(lpSolve)
 library(tidyverse)
@@ -35,7 +35,6 @@ setwd("C:/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/u
 ###################################
 # 2 - Load and set up data for LPP
 ###################################
-
 # Load epi/cost/CE dataset 
 #****************************************************
 df <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
@@ -52,36 +51,32 @@ df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs ave
 
 colnames(df_hr) = df_hr[1,] # remove first row
 
-# ^^ Browse data ^^
-#head(df,70)
-#colnames(df)
+# Extract .csv versions of input data
+write.csv(df, file = "3_processing/uganda_intervention_data.csv")
+write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
 
-# Set up HR constraints dataframe
+# Set up HR constraint dataframes
 #****************************************************
-hr_minutes <- df_hr$'Total patient-facing time per year (minutes)'[2:9]
-hr_size <- df_hr$'Total staff'[2:9]
-hr_size <- as.numeric(hr_size)
-hr_minutes <- as.numeric(hr_minutes) 
+hr_minutes <- as.numeric(df_hr$'Total patient-facing time per year (minutes)'[2:9]) # number of minutes available per health worker cadre
+hr_size <- as.numeric(df_hr$'Total staff'[2:9]) # size of health workforce
 
 # Generate relevant lists from dataset
 #****************************************************
 # Rename columns
 names(df)[names(df) == 'DALYs averted per patient (Uganda)'] <- 'dalys'
 names(df)[names(df) == 'Average drugs and commodities cost (2019 USD)'] <- 'drugcost'
-names(df)[names(df) == 'Coverage_2024'] <- 'maxcoverage'
+names(df)[names(df) == 'Coverage_2024'] <- 'maxcoverage' # Maximum feasible coverage in 2024 as per OneHealth Tool
 names(df)[names(df) == 'Cost per case (Uganda) - 2019 USD'] <- 'fullcost'
 names(df)[names(df) == 'Intervention'] <- 'intervention'
 names(df)[names(df) == 'Cases_full_2020'] <- 'cases'
 names(df)[names(df) == 'Code'] <- 'intcode'
 names(df)[names(df) == 'Category'] <- 'category'
 
-df$drugcost <- as.numeric(df$drugcost)
-df$dalys <- as.numeric(df$dalys)
-df$maxcoverage <- as.numeric(df$maxcoverage)/100
-df$fullcost <- as.numeric(df$fullcost)
-df$cases <- as.numeric(df$cases)
-
 N <- length(df$dalys) # total number of interventions included in the analysis
+
+# Convert columns to numeric
+df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases'), as.numeric)
+
 
 # Set up a function to define how various columns in the main dataframe will be collapsed to address complements
 collapse <- function(x){
@@ -265,7 +260,7 @@ find_optimal_package <- function(data.frame,
     print("")
   } else if (task_shifting_pharm == 1){
     nursingstaff <- rbind(as.matrix(nursingstaff), as.matrix(nursingstaff + pharmstaff), as.matrix(nursingstaff + nutristaff), as.matrix(nursingstaff + nutristaff + pharmstaff))
-    medstaff <- rbind(as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff), as.matrix(medstaff))
+    medstaff <- duplicate_matrix_horizontally(reps,as.matrix(medstaff))
     pharmstaff <- rbind(as.matrix(pharmstaff), as.matrix(rep(0,N)), as.matrix(pharmstaff), as.matrix(rep(0,N)))
     labstaff <- duplicate_matrix_horizontally(reps,as.matrix(labstaff))
     dentalstaff <- duplicate_matrix_horizontally(reps,as.matrix(dentalstaff))
@@ -646,7 +641,7 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   #***********************************************************************************
   # HR Resource Use
   data_hr <- sweep(solution_hruse, 2, cons_hr.limit_base, FUN = '/')
-  hr_cadres <- c("Doctor/\nMedical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
+  hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
                  "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff")
   #colnames(data_hr) <- hr_cadres
   
