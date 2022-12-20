@@ -79,23 +79,23 @@ df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases'
 str(df) # ^^ check format of all columns ^^	
 
 ###################################
-# 3. Define optimization function
+# 3. Define customizable LPP/optimization function
 ###################################
-#outputs of this function are - 
-find_optimal_package <- function(data.frame, 
-                                 objective_input = "nethealth", 
-                                 cet_input = 161, 
-                                 drug_budget_input, 
-                                 drug_budget.scale = 1,  
-                                 hr.scale, 
-                                 use_feasiblecov_constraint = 1, 
-                                 feascov_scale = 1, 
-                                 compcov_scale = 1, 
-                                 compulsory_interventions = NULL, 
-                                 substitutes = NULL, 
+find_optimal_package <- function(data.frame, # data on interventions 
+                                 objective_input = "nethealth", # what is being maximised
+                                 cet_input = 161, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
+                                 drug_budget_input, # size of consumables budget
+                                 drug_budget.scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
+                                 hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
+                                 use_feasiblecov_constraint = 1, # whether maximum feasible coverage constraints should be applied
+                                 feascov_scale = 1, # use this to scale maximum feasible coverage constraints up or down (1 -> no scaling applied)
+                                 compulsory_interventions = NULL, # list of "compulsory interventions" - to be included in package regardless of optimisation rule
+                                 compcov_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
+                                 substitutes = NULL, # list of substitutable interventions 
                                  complements_nested1 = NULL,
-                                 complements_nested2 = NULL, 
-                                 task_shifting_pharm = 0){ # % complements %
+                                 complements_nested2 = NULL, # List of complementary interventions
+                                 task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
+{ 
   intervention <<- data.frame$intervention
   intcode <<- data.frame$intcode # list of intervention codes
   category <<- data.frame$category # program/category of intervention
