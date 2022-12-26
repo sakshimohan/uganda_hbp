@@ -178,9 +178,9 @@ colnames(summary) = c("Constraints applied", "Number of interventions with posit
                       "% of Mental health staff capacity required", "% of Nutrition staff capacity required")
 
 print(xtable(summary, type = "latex"), file = "4_outputs/tables/scanario_summaries.tex")
-write.csv(t(summary), file = "4_outputs/tables/scenarios_results.csv")
+write.csv(t(summary), file = "4_outputs/tables/all_scenarios_results.csv")
 
 # Results on chosen package/coverage under various scenarios
 coverage_byscenario = cbind(category, intcode, intervention, scen1_coverage, scen2_coverage, scen3_coverage, scen4_coverage, scen5_coverage, scen6_coverage, scen7_coverage, scen8_coverage)
 colnames(coverage_byscenario) = c("Program", "Intervention code", "Intervention", scenarios)
-write.csv(coverage_byscenario, file = "4_outputs/tables/scenarios_coverage_results.csv")
+write.csv(coverage_byscenario, file = "4_outputs/tables/all_scenarios_coverage_results.csv")

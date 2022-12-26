@@ -1,0 +1,126 @@
+"","Program","Intervention code","Intervention","No constraints","CET (0.5 X GDP per capita)","CET ($161)","CET ($161) + Drug Budget","CET ($161) + Drug budget + Feasible coverage","CET ($161) + Drug budget + Feasible coverage + HR capacity(except pharmacists)","CET ($161) + Drug budget + Feasible coverage + HR capacity","CET ($161) + Drug budget + Feasible coverage + HR capacity(with task shifting to nurses)"
+"1","RMNCH","001","Caesarean Section with indication, with complication (Emergency)",0.999999999999978,0.999999999999978,0.999999999999978,0.999999999999978,0.999999999999978,0.999999999999978,0.999999999999978,0.999999999999978
+"2","RMNCH","002","Caesarean section with indication (Elective)",0.999999999999772,0.999999999999772,0.999999999999772,0.999999999999772,0.999999999999772,0.999999999999772,0.999999999999772,0.999999999999772
+"3","RMNCH","003","Safe abortion services",1.00000000000061,0,0,0,0,0,0,0
+"4","RMNCH","004","Post-abortion case management",1.0000000000005,0,0,0,0,0,0,0
+"5","RMNCH","005","Ectopic case management",0.999999999999965,0,0,0,0,0,0,0
+"6","RMNCH","006","Basic Antenatal care (ANC) visit",1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,0,1.00000000000042
+"7","RMNCH","007","Tetanus toxoid (pregnant women)",1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,0,1.00000000000042
+"8","RMNCH","010","Syphilis detection and treatment (pregnant women)",1.00000000000039,1.00000000000039,1.00000000000039,1.00000000000039,1.00000000000039,1.00000000000039,0,1.00000000000039
+"9","RMNCH","011","Hypertensive disorder case management",1.0000000000003,1.0000000000003,0,0,0,0,0,0
+"10","RMNCH","014","Management of eclampsia",1.00000000000038,1.00000000000038,1.00000000000038,1.00000000000038,1.00000000000038,1.00000000000038,0,1.00000000000038
+"11","RMNCH","015","Management of pre-eclampsia",0.999999999999282,0.999999999999282,0.999999999999282,0.999999999999282,0.999999999999282,0.999999999999282,0,0.999999999999282
+"12","RMNCH","016","Neonatal resuscitation (institutional)",0.999999999999312,0.999999999999312,0.999999999999312,0.999999999999312,0.999999999999312,0.999999999999312,0.999999999999312,0.999999999999312
+"13","RMNCH","017","Management of obstructed labour",1.00000000000006,1.00000000000006,1.00000000000006,1.00000000000006,1.00000000000006,1.00000000000006,1.00000000000006,1.00000000000006
+"14","RMNCH","019","Kangaroo mother care",1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048
+"15","RMNCH","020","Support for breastfeeding mothers",1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042
+"16","RMNCH","023","Clean practices and immediate essential newborn care (in facility)",1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042
+"17","RMNCH","024","Antenatal corticosteroids for preterm labour",0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504
+"18","RMNCH","025","Antibiotics for preterm premature rupture of membranes (pPROM)",1.00000000000044,1.00000000000044,1.00000000000044,1.00000000000044,1.00000000000044,1.00000000000044,1.00000000000044,1.00000000000044
+"19","RMNCH","026","Induction of labour (beyond 41 weeks)",0.999999999999754,0.999999999999754,0.999999999999754,0.999999999999754,0.999999999999754,0.999999999999754,0.999999999999754,0.999999999999754
+"20","RMNCH","027","Maternal Sepsis case management",1,1,1,1,1,1,0,0
+"21","RMNCH","028","Newborn sepsis - Full supportive care",1.00000000000061,1.00000000000061,1.00000000000061,1.00000000000061,1.00000000000061,1.00000000000061,0,0
+"22","RMNCH","036","Chlorhexidine for infection prevention during delivery",0.999999999999903,0.999999999999903,0.999999999999903,0.999999999999903,0.999999999999903,0.999999999999903,0.999999999999903,0.999999999999903
+"23","HIV & STIs","037","Treatment of sexually transmitted infections (gonorrhea)",0.9999999999995,0.9999999999995,0.9999999999995,0.9999999999995,0.9999999999995,0.9999999999995,0,0.9999999999995
+"24","HIV & STIs","038","Treatment of sexually transmitted infections (chlamydia)",0.999999999999641,0.999999999999641,0.999999999999641,0.999999999999641,0.999999999999641,0.999999999999641,0,0.999999999999641
+"25","HIV & STIs","043","Treatment of sexually transmitted infections (trichomoniasis)",1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,0,1.00000000000055
+"26","HIV & STIs","044","Treatment of sexually transmitted infections (Pelvic Inflammatory Disease, PID)",1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,1.00000000000055,0,1.00000000000055
+"27","Vaccine Preventable Diseases","045","Rotavirus vaccine",1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,0,1.00000000000008
+"28","Vaccine Preventable Diseases","046","Measles vaccine",1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,0,1.00000000000008
+"29","Vaccine Preventable Diseases","047","DPT-Heb-Hib / Pentavalent vaccine",1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008
+"30","Vaccine Preventable Diseases","048","Polio vaccine",1.00000000000008,0,0,0,0,0,0,0
+"31","Vaccine Preventable Diseases","051","BCG vaccine",1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,0,1.00000000000008
+"32","Vaccine Preventable Diseases","052","Pneumococcal vaccine",1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008,1.00000000000008
+"33","Malaria","059","Long-lasting insecticide-treated bed nets (LLIN) distribution to pregnant women",1.00000000000042,1.00000000000042,1.00000000000042,0,0,0.884980057829073,0,0
+"34","Malaria","061","Intermittent presumptive treatment (IPT) with sulfadoxine-pyrimethamine (SP, pregnant women)",1.00000000000042,1.00000000000042,0,0,0,0,0,0
+"35","Malaria","063","Indoor residual spray and LLINs",0.999999999999582,0.999999999999582,0.999999999999582,0.999999999999582,0.999999999999582,0.999999999999582,0.999999999999582,0.999999999999581
+"36","Malaria","071","Case management with artemisinin based combination therapy (80% coverage)",1.00000000000036,1.00000000000036,1.00000000000036,1.00000000000036,1.00000000000036,1.00000000000036,1.00000000000036,1.00000000000036
+"37","Malaria","077","Home management of fevers using antimalarial (artesunate- amodiaquine AAQ) - under 5",0.999999999999628,0.999999999999628,0.999999999999628,0.999999999999628,0.999999999999628,0.999999999999628,0.999999999999628,0.999999999999628
+"38","Malaria","090","Injectable artesunate for complicated malaria treatment - children",1.00000000000015,1.00000000000015,1.00000000000015,1.00000000000015,1.00000000000015,1.00000000000015,1.00000000000015,1.00000000000015
+"39","Malaria","093","Intermittent preventive treatment in infants (IPTi) using 3 days of amodiaquine-artesunate (AQ3-AS3) against clinical malaria; at 2, 3, and 9 months.",1,1,1,1,1,1,0,1
+"40","TB","095","Isoniazid Preventive Therapy for children in contact with TB patients",1.0000000000006,1.0000000000006,1.0000000000006,1.0000000000006,1.0000000000006,1.0000000000006,0,1.0000000000006
+"41","TB","096","Isoniazid Preventive Therapy for HIV+ pregnant women",0.999999999999789,0.99999999999979,0.99999999999979,0.99999999999979,0.99999999999979,0.99999999999979,0.99999999999979,0.99999999999979
+"42","TB","097","Isoniazid Preventive Therapy for HIV+ people",0,0,0,0,0,0,0,0
+"43","TB","104","Minimal Directly Observed Therapy Shortcourse (DOTS, smear positive cases)",1,1,1,1,1,1,0,1
+"44","TB","105","Full DOTS (smear negative and extrapulmonary cases)",1,1,1,1,1,1,0,1
+"45","TB","106","Full combination DOTS (Multi-drug resistant, MDR cases)",1.00000000000005,1.00000000000005,1.00000000000005,1.00000000000005,1.00000000000005,1.00000000000005,0,1.00000000000005
+"46","TB","110","Cotrimoxazole preventive therapy for TB HIV+ patients",1.00000000000001,1.00000000000001,0,0,0,0,0,0
+"47","HIV & STIs","112","Clinical monitoring and quarterly CD4 counts and viral load measurement",0,0,0,0,0,0,0,0
+"48","HIV & STIs","113","Clinical monitoring and quarterly CD4 counts",1,0,0,0,0,0,0,0
+"49","HIV & STIs","116","Mass media campaigns for HIV prevention",1,1,1,1,1,1,1,1
+"50","HIV & STIs","118","Youth focused education interventions on HIV prevention - In-school",1,1,0,0,0,0,0,0
+"51","HIV & STIs","120","Blood safety",1,1,1,1,1,1,1,1
+"52","HIV & STIs","128","Interventions focused on male sex workers",1,1,1,1,1,1,1,1
+"53","HIV & STIs","129","Interventions focused on men who have sex with men",1,1,1,1,1,1,1,1
+"54","HIV & STIs","131","Peer education for sex workers",1,1,1,1,1,1,1,1
+"55","HIV & STIs","132","HIV Voluntary counselling and testing services",1,1,1,1,1,1,1,0.358254949887104
+"56","HIV & STIs","134","Male circumcision",1,1,1,1,1,1,1,1
+"57","HIV & STIs","135","Prevention of mother to child transmission (PMTCT)",0.999999999999585,0.999999999999585,0.999999999999585,0.999999999999585,0.999999999999585,0.999999999999585,0.999999999999585,0.999999999999585
+"58","HIV & STIs","137","Pre-exposure prophylaxis for high-risk serodiscordant couples",1,0,0,0,0,0,0,0
+"59","HIV & STIs","138","Pre-exposure prophylaxis for pregnant and breastfeeding women",0.999999999999585,0,0,0,0,0,0,0
+"60","HIV & STIs","139","Antiretroviral treatment (ART) for men",1.0000000000008,1.0000000000008,0,0,0,0,0,0
+"61","HIV & STIs","140","Antiretroviral treatment (ART) for women",1.00000000000002,1.00000000000002,0,0,0,0,0,0
+"62","HIV & STIs","141","Home-based highly active retroviral therapy (HAART)",1.00000000000034,0,0,0,0,0,0,0
+"63","Nutrition","156","Calcium supplementation",1.00000000000039,0,0,0,0,0,0,0
+"64","Nutrition","161","Community-based management of severe malnutrition (children)",0.999999999999928,0.999999999999928,0.999999999999928,0.999999999999928,0.999999999999928,0,0,0.999999999999928
+"65","Nutrition","162","Community-based management of moderate acute malnutrition (children)",0.999999999999808,0.999999999999808,0.999999999999808,0.999999999999808,0.999999999999808,0.416624898175882,0.416624898175882,0.999999999999808
+"66","Nutrition","163","Inpatient management of severe malnutrition (children)",0.999999999999928,0.999999999999928,0,0,0,0,0,0
+"67","Nutrition","165","Vitamin-A fortification (sugar) and Zinc fortification (wheat)",1,1,1,1,1,1,1,1
+"68","Nutrition","166","Vitamin A supplementation in infants and children 6-59 months",0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0,0
+"69","Nutrition","167","Provision of supplementary food and nutrition counselling with growth monitoring",1.00000000000025,0,0,0,0,0,0,0
+"70","Nutrition","168","Zinc supplementation",0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0.999999999999487,0,0.999999999999487
+"71","NCDs","178","Gastrointestinal Tract (GIT) cancer",0.999999999999596,0,0,0,0,0,0,0
+"72","NCDs","185","Colorectoral cancer (active screening + treatment)",1,0.994786485218207,0,0,0,0,0,0
+"73","NCDs","186","Colorectoral cancer (treatment)",0,1,1,0,0,0,0,0
+"74","NCDs","187","Treatment of injuries (Fracture and dislocation - reduction)",0.999999999999716,0.999999999999716,0.999999999999715,0.999999999999715,0.999999999999715,0.999999999999715,0,0.999999999999715
+"75","NCDs","188","Treatment of injuries (Fracture and dislocation - fixation)",1.00000000000059,1.00000000000059,0,0,0,0,0,0
+"76","NCDs","190","Amputation",1,1,1,1,1,1,1,1
+"77","NCDs","191","Emergency inguinal hernia repair",0.999999999999296,0.999999999999297,0.999999999999297,0.999999999999297,0.999999999999297,0.999999999999297,0.999999999999297,0.999999999999296
+"78","NCDs","192","Elective inguinal hernia repair",1,1,1,1,1,1,1,1
+"79","NCDs","195","Chronic Obstructive Pulmonary Disorder (COPD) - Inhaled salbutamol",1,0,0,0,0,0,0,0
+"80","NCDs","198","COPD - treatment of severe exacerbations",0.999999999999892,0,0,0,0,0,0,0
+"81","NCDs","199","COPD - oxygen therapy and drugs",0.999999999999892,0,0,0,0,0,0,0
+"82","NCDs","202","Asthma: Inhaled short acting beta agonist for intermittent asthma",0.999999999999933,0,0,0,0,0,0,0
+"83","NCDs","203","Asthma: Low dose inhaled beclometasone + short-acting beta agonist (SABA)",0.999999999999933,0,0,0,0,0,0,0
+"84","NCDs","210","Community-based management of hypertension (prevention and monitoring)",1,1,0,0,0,0,0,0
+"85","NCDs","213","Retinopathy Screening and photocoagulation for diabetics",1,0,0,0,0,0,0,0
+"86","NCDs","217","Prevention of cardiovascular disease",0,0,0,0,0,0,0,0
+"87","NCDs","218","Prevention and treatment of cardiovascular disease",1,1,1,0.906032202080622,0.915665303195977,1,1,0.992493904320308
+"88","NCDs","223","Breast Cancer - active screening (biannual clinical breast examination of asymptomatic women aged 40-69 years) + treatment of stages I-IV",1,0,0,0,0,0,0,0
+"89","NCDs","224","Basic palliative care (BPC) for breast cancer",0,0,0,0,0,0,0,0
+"90","NCDs","225","Breast Cancer - active screening (biannual mammography of asymptomatic women aged 50-69 years) + treatment of stages I-IV",1,0,0,0,0,0,0,0
+"91","Mental Health","229","Treatment of depression - antidepressants",1,1,0,0,0,0,0,0
+"92","Mental Health","230","Treatment of acute psychotic disorders (anti-psychotic drug + psychosocial intervention)",1.00000000000007,0,0,0,0,0,0,0
+"93","Mental Health","231","Treatment of bipolar disorder (drug-based)",1,0,0,0,0,0,0,0
+"94","Mental Health","232","Anti-epileptic medication",1,1,1,1,1,1,1,1
+"95","Mental Health","233","Basic psychosocial support, advice, and follow-up (including antidepressants)",0,0,0,0,0,0,0,0
+"96","Mental Health","234","Treatment of schizophrenia",1,0,0,0,0,0,0,0
+"97","NCDs","235","Substance use disorder (alcohol) - Brief advice on alcohol use in primary care including education and psychosocial counselling",1,1,0,0,0,0,0,0
+"98","NTDs","242","Schistosomiasis Mass drug administration (adults)",1.00000000000011,1.00000000000011,1.00000000000011,1.00000000000011,1.00000000000011,1.00000000000011,1.00000000000011,1.00000000000011
+"99","NTDs","245","Trachoma mass drug administration",1,1,1,1,1,1,1,1
+"100","NTDs","246","Trachoma Trichiasis cases surgery",1,1,1,1,1,1,0,1
+"101","IMCI","248","Pneumonia treatment (children)",0.999999999999236,0.999999999999236,0.999999999999236,0.999999999999236,0.999999999999236,0.999999999999236,0,0.999999999999236
+"102","IMCI","249","Oral rehydration solution (ORS) and Zinc for diarrhea",1.00000000000014,1.00000000000014,1.00000000000014,1.00000000000014,1.00000000000014,1.00000000000014,0,1.00000000000014
+"103","IMCI","250","Antibiotics for treatment of dysentery",1.00000000000019,1.00000000000019,0,0,0,0,0,0
+"104","IMCI","251","Treatment of severe diarrhea",0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0.999999999999504,0,0.999999999999504
+"105","RMNCH","291","Modern contraceptive: Oral contraceptive pill",1.00000000000026,1.00000000000026,1.00000000000026,1.00000000000026,1.00000000000026,1.00000000000026,1.00000000000026,1.00000000000026
+"106","RMNCH","292","Modern contraceptive: Condoms",1.00000000000034,1.00000000000034,0,0,0,0,0,0
+"107","RMNCH","296","Fistula",1.0000000000004,1.0000000000004,1.0000000000004,1.0000000000004,1.0000000000004,1.0000000000004,1.0000000000004,1.0000000000004
+"108","RMNCH","298","Modern contraception: Long-acting injectable hormones",1.00000000000064,1.00000000000064,1.00000000000064,1.00000000000064,1.00000000000064,1.00000000000064,0,1.00000000000064
+"109","RMNCH","299","Modern contraception: Intrauterine device (IUD)",1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,0,1.00000000000048
+"110","RMNCH","300","Modern contraception: Levonorgestrel-releasing implant",1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048
+"111","RMNCH","301","Modern contraception: Female sterilization",1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048,1.00000000000048
+"112","RMNCH","302","Modern contraception: Male sterilization",0.999999999999898,0.999999999999898,0.999999999999898,0.999999999999898,0.999999999999898,0.999999999999898,0.955875776142763,0.999999999999898
+"113","RMNCH","303","Daily iron and folic acid supplementation (pregnant women)",1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,1.00000000000042,0,1.00000000000042
+"114","Nutrition","307","Iron fortification",1,1,1,1,1,1,1,1
+"115","TB","317","Xpert test (Specific cases - HIV +ve, known contact of MDR-TB cases, retreatment cases)",0.999999999999759,0.999999999999759,0.999999999999759,0.999999999999759,0.999999999999759,0.999999999999759,0.999999999999759,0.999999999999759
+"116","HIV & STIs","321","ART (Second-Line Treatment) for adults without intensive monitoring",0,0,0,0,0,0,0,0
+"117","HIV & STIs","322","ART (Second-Line Treatment) for adults with intensive monitoring",0.999999999999847,0,0,0,0,0,0,0
+"118","Nutrition","332","Community management of nutrition in under-5 - micronutrient powder",1,0,0,0,0,0,0,0
+"119","NCDs","335","Testing of pre-cancerous cells (vinegar)",1.00000000000028,1.00000000000027,1.00000000000028,1.00000000000028,0.781250000000215,0.781250000000215,0.781250000000215,0.781250000000215
+"120","RMNCH","346","Prenatal distribution of misoprostol (for post-partum hemorrhage prevention)",1.00000000000077,1.00000000000077,1.00000000000077,1.00000000000077,1.00000000000077,1.00000000000077,0,1.00000000000077
+"121","Vaccine Preventable Diseases","349","Oral cholera vaccine",0.999999999999726,0,0,0,0,0,0,0
+"122","NCDs","350","Smear test at age 40 for cervical cancer detection + cancer treatment",1,1,1,0,0,0,0,0
+"123","NCDs","351","Human papillomavirus (HPV) vaccination for girls 9-13",0.999999999999669,0.999999999999669,0,0,0,0,0,0
+"124","RMNCH","353","Vaginal delivery without complication - skilled attendance (including active management of third stage of labour)",1.00000000000003,1.00000000000003,1.00000000000003,1.00000000000003,1.00000000000003,1.00000000000003,0.999975000624604,1.00000000000003
+"125","RMNCH","354","Vaginal Delivery with complication (including active management of third stage of labour)",0.999999999999179,0.999999999999178,0.999999999999178,0.999999999999178,0.999999999999178,0.999999999999178,0.999999999999178,0.999999999999178
