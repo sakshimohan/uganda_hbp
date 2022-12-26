@@ -7,9 +7,6 @@
 # scenario generation
 #############################################################
 
-# % Notes surrounded by "%" represent temporary code which should be substituted if a better way can be found to deal with the issue %
-# Verification/browse code is indented and commented out surrounded by "^^"
-
 ##############################
 # 0 - Load librairies
 ##############################
@@ -251,7 +248,6 @@ find_optimal_package <- function(data.frame, # data on interventions
   dim(cons.feascov.limit) # 111 X 1
   dim(nonneg.lim) # 111 X 1
   
-  # % Update this to refer to intervention codes rather than row number % 
   # 4. Compulsory interventions
   #--------------------------------------
   if (length(compulsory_interventions) > 0){
@@ -276,6 +272,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   cons_compulsory <<- t(cons_compulsory) 
   
   # 5. Complementary interventions
+  #--------------------------------------
   # Nested complement is delivered to a proportion of those covered by the base intervention (this proportion can be 100%)
   complements_nested = complements_nested
   complements.count <- length(complements_nested)
@@ -326,26 +323,23 @@ find_optimal_package <- function(data.frame, # data on interventions
         subsgrp_cases = cbind(subsgrp_cases,cases_max) 
       }
       subsgrp_casesmax[i] = max(subsgrp_cases)
-      #print(paste("Group", i, "Cases max", subsgrp_casesmax[i]))
     }
   }
   
   # Next define the constraint such that the sum of the cases for each substitute interventions is less than or equal to the maxumum feasible cases derived above
-  # print("Substitutes")
+  print("Substitutes")
   for (i in 1:subs.count){
-    # print(paste("Substitute group", i))
-    # print("------------------------------------------------------------")
+    print(paste("Substitute group", i))
+    print("------------------------------------------------------------")
     for (j in substitutes[i]){
       for (k in j){
         a <- which(data.frame$intcode == k)
         b <- data.frame$intervention[a]
-        #     print(paste("Intervention: ",b, "; Code: ", k, "; Maximum cases for intervention:", cons.feascov.limit[a],"; Number: ",a))
-        cons_substitutes[i,a] <<- cases[a] # changed on 12May from 1 to cases
-        cons_substitutes.limit[i] <<- subsgrp_casesmax[i] # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
+        cons_substitutes[i,a] <<- cases[a] 
+        cons_substitutes.limit[i] <<- subsgrp_casesmax[i]
+        print(paste("Intervention: ",b, "; Code: ", k, "; Maximum cases for group:", cons_substitutes.limit[i]))
       }
     }
-    #cons_substitutes.limit[i] <- cons_substitutes.limit[i]/lengths(substitutes)[i]  # removed on 12May
-    # print(paste("Maximum combined cases for group ",i, "= ", subsgrp_casesmax[i])) # print suppressed
   }  
   cons_substitutes <<- t(cons_substitutes)
   
@@ -374,20 +368,18 @@ find_optimal_package <- function(data.frame, # data on interventions
     print('ERROR: task_shifting_pharm can take values 0 or 1')
   }
   
-  #   
-  # COMBINE ALL
-  print(dim(t(cons_drug)))
-  print(dim(t(cons_hr)))
-  print(dim(t(cons.feascov)))
-  print(dim(t(cons_compulsory)))
-  print(dim(t(cons_substitutes)))
-  print(dim(t(cons_complements)))
-  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) 
-  dim(cons.mat) # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X N
-  cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit)
-  dim(cons.mat.limit) # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X 1
-  print(dim(cons.mat))
-  print(dim(cons.mat.limit))  
+  # Combine all the above constraints into one matrix
+  # Print dimensions of individual matrices to check that the dimensions of LHS and RHS are the same
+  print(paste("Dimension - Drug constraint:", paste(unlist(dim(t(cons_drug))), collapse=' ')))
+  print(paste("Dimension - HR onstraint:", paste( unlist(dim(t(cons_hr))), collapse=' ')))
+  print(paste("Dimension - Feasible coverage constraint:", paste( unlist(dim(t(cons.feascov))), collapse=' ')))
+  print(paste("Dimension - Compulsory interventions constraint:", paste( unlist(dim(t(cons_compulsory))), collapse=' ')))
+  print(paste("Dimension - Substitutes constraint:", paste( unlist(dim(t(cons_substitutes))), collapse=' ')))
+  print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
+  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+  cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+  print(paste("Dimension of LHS", paste( unlist(dim(cons.mat)), collapse=' '))) # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X N
+  print(paste("Dimension of RHS", paste( unlist(dim(cons.mat.limit)), collapse=' ')))  # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X 1
   
   # Direction of relationship
   cons.dir <- rep("<=",1+8+n)
@@ -461,9 +453,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   a <- which(icer == max(temp['icer'][temp['solution.class$solution'] > 0])) # to check which included intervention has the highest ICER
   least.ce.intervention <- data.frame$intervention[a]
   
-  # Collapse above outputs so that each intervention appears once in the list irrespective of task-shifting
-  #pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres])
-  
+  # Summarised list of outputs printed upon running the fucntion
   outputs <- list("Total number of interventions in consideration" = length(dalys), 
                   "Number of interventions with positive net health impact" = pos_nethealth.count, 
                   "Number of interventions in the optimal package" = intervention.count,
@@ -478,7 +468,7 @@ find_optimal_package <- function(data.frame, # data on interventions
 }
 
 #############################################################
-# Function to generate resource use stacked bar charts
+# 4. Function to generate resource use stacked bar charts
 #############################################################
 # Note that in order to run this function, find_optimal_package needs to be run first
 gen_resourceuse_graphs <- function(plot_title, file_name){
@@ -486,17 +476,15 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   pal <- rainbow(10)
   
   ## Generate matrix representing HR and Drug budget use by the HBP solution run above
-  #***********************************************************************************
+  #--------------------------------------------------------------------------------------
   # HR Resource Use
   data_hr <- sweep(solution_hruse, 2, cons_hr.limit_base, FUN = '/')
   hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
                  "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff")
-  #colnames(data_hr) <- hr_cadres
   
   # Drug budget Use
   data_drug <- as.matrix(solution_drugexp)/cons_drug.limit_base
-  #colnames(data_drug) <- 'Drug \nbudget'
-  
+
   length(data_drug) = dim(data_hr)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
   # Combine all resource use matrices into one matrix
@@ -507,20 +495,14 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   data <- cbind(category,data)
   
   ## Convert to long form in order to apply ggplot 
-  #***********************************************************************************
+  #--------------------------------------------------------------------------------------
   data <- as.data.frame(data)
   colnames(data) <- c('category', hr_cadres[-c(4, 5,8)], 'Consumables \nbudget')
   data_long <<- gather(data, resource, use, 2:'Consumables \nbudget', factor_key=TRUE)
   data_long$use <<- as.numeric(data_long$use) # convert use data to numeric
   
-  # Arrange/sort and compute cumulative sums to position labels on each stacked portion
-  #data_long <- data_long %>%
-  #  group_by(resource) %>%
-  #  arrange(resource, desc(category)) %>%
-  #  mutate(lab_ypos = cumsum(use) - 0.5 * use) 
-  
   ## Generate graph
-  #***********************************************************************************
+  #--------------------------------------------------------------------------------------
   p <- ggplot(data = data_long, aes(x = resource, y = use)) +
     geom_col(aes(fill = category), width = 0.7)
   #+geom_text(aes(y = lab_ypos, label = intcode, group =intcode), color = "white") # add data labels
