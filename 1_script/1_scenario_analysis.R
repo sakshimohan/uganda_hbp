@@ -1,3 +1,12 @@
+#############################################################
+## Uganda's Health Benefits Package - All scenarios
+
+## Created by: Sakshi Mohan; 15/12/20
+
+## This file sets the inputs for the linear constrained optimisation function to be used in
+# scenario generation for Uganda's HBP analysis
+#############################################################
+
 ##########################################################
 # 1 - Set Working Directory & and Run LP function Script
 ##########################################################

@@ -1,4 +1,10 @@
+#############################################################
+## Linear Programming Function to optimize Uganda's Health Benefits Package
 
+## Created by: Sakshi Mohan; 01/2021
+
+## This file generates the outputs for the Health Economics submission 
+#############################################################
 
 # Extract resource use and case numbers for scenario 7 and 8
 # solution_hruse, solution_drugexp
