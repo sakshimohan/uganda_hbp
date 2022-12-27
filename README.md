@@ -7,6 +7,13 @@ This model was first applied to Uganda in 2020.
 
 *Health Benefits Package
 
+## Files of interest
+### Data
+1. Clean input data on interventions: _3_processing/uganda_intervention_data.csv_
+2. Constraints: 3_processing/uganda_hr_data.csv, _1_script/1_scenario_analysis.R_
+
+### Script
+1. Linear Programming Function: _1_script/0_packages_and_functions.R_
+
 ## Acknowledgements 
 The script was written by _Sakshi Mohan_ guided by _Simon Walker_. The authors for the analysis are _Sakshi Mohan, Simon Walker, Freddie Sengooba, Elizabeth Ekirapa Kiracho, Chrispus Mayora, Aloysius Ssennyonjo, Candia Tom Aliti, Paul Revill_.
-
