@@ -10,7 +10,7 @@ This model was first applied to Uganda in 2020.
 ## Files of interest
 ### Data
 1. **Clean input data on interventions**: _3_processing/uganda_intervention_data.csv_
-2. **Constraints**: 3_processing/uganda_hr_data.csv, _1_script/1_scenario_analysis.R_
+2. **Constraints**: _3_processing/uganda_hr_data.csv_, _1_script/1_scenario_analysis.R_
 
 ### Script
 1. **Linear Programming Function**: _1_script/0_packages_and_functions.R_
