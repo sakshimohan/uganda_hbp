@@ -8,5 +8,5 @@ This model was first applied to Uganda in 2020.
 *Health Benefits Package
 
 ## Acknowledgements 
-The script was written by **Sakshi Mohan** guided by _Simon Walker_. The authors for the analysis are _Sakshi Mohan, Simon Walker, Freddie Sengooba, Elizabeth Ekirapa Kiracho, Chrispus Mayora, Aloysius Ssennyonjo, Candia Tom Aliti, Paul Revill_.
+The script was written by _Sakshi Mohan_ guided by _Simon Walker_. The authors for the analysis are _Sakshi Mohan, Simon Walker, Freddie Sengooba, Elizabeth Ekirapa Kiracho, Chrispus Mayora, Aloysius Ssennyonjo, Candia Tom Aliti, Paul Revill_.
 
