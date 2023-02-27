@@ -1,7 +1,9 @@
 # Linear constrained optimization for HBP* design
 
+*[This branch represents the version of the code used for the 2023 Health Economics publication]*
 This repository contains the script which uses intervention-level data on cost-effectiveness, size of eligible population consuambles cost, human resource requirements 
 to generate an optimal health benefits package for a country, which maximises the population health impact given the chosen constraints. 
+
 
 This model was first applied to Uganda in 2020. 
 
