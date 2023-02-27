@@ -1,6 +1,6 @@
 # Linear constrained optimization for HBP* design
 
-*[This branch represents the version of the code used for the 2023 Health Economics publication]*
+*[This branch represents the version of the code used for the 2023 Health Economics publication. See master branch for the latest version.]*
 
 
 This repository contains the script which uses intervention-level data on cost-effectiveness, size of eligible population consuambles cost, human resource requirements 
