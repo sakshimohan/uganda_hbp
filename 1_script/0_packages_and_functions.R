@@ -38,7 +38,7 @@ df <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "data",col_names = TRU
 # Load HR availability dataset
 #****************************************************
 df_hr <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
-
+# Note that these files should be read in 1_scenario_analysis.R so that only the packages are loaded and optimisation function created in this file
 # Set up dataframes
 #****************************************************
 colnames(df) = df[2,] # remove first two rows
