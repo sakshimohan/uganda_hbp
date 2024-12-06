@@ -357,8 +357,6 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       }
     }
     
-    dim(cons_compulsory)
-    
   } else if (nrow(df_compulsory) == 0) {
     # If no compulsory intervention exists, create a 1 x N matrix of zeroes.
     comp.count <- 1
