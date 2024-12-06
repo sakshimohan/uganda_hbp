@@ -12,7 +12,9 @@
 ##########################################################
 # 1 - Set Working Directory & and Run LP function Script
 ##########################################################
-setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/R files for constrained optimization/")
+# Point to where the data is stored on your machine
+#setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/R files for constrained optimization/")
+setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/2_data") 
 
 # Run R script which generates LP function
 source("0_packages_and_functions_final_version2.0.R")

@@ -1,7 +1,3 @@
-# Written by: Sakshi Mohan
-
-# Updated by: Megha Rao
-
 ##############################
 # 0 - Load libraries
 ##############################
@@ -19,12 +15,6 @@ library(tidyr)
 library(scales) # to formal axis labels
 library(viridis) # load viridis colour palette
 
-##############################
-# 1 - Set Working Directory
-##############################
-#setwd("C:/Users/crw571/OneDrive - University of York/Desktop/R files for constrained optimization")
-setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/2_data")
-
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
@@ -36,20 +26,20 @@ find_optimal_package <- function(data.frame, # data on interventions
                                  hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
                                  allow_demand_constraint = 0, # whether maximum feasible coverage constraints should be applied (default set to 0)
                                  allow_other_modes_delivery = 0, # whether other modes of delivery should be allowed 
-                                 feascov_scale =1,
+                                 feascov_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
                                  compcov_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
                                  allow_task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
 { 
   intervention <<- data.frame$intervention
   intcode <<- data.frame$intcode # list of intervention codes
   category <<- data.frame$category # program/category of intervention
-  dalys <<- data.frame$dalys # Per person DALintervention <<- data.frame$interventionYs averted based on CE evidence
-  drugcost <<- data.frame$drugcost #  Per person cost of drugs and commodities
-  maxcoveragechw <<- data.frame$maxcovchw # Maximum possible coverage for community health workers
-  maxcoverageprivate <<- data.frame$maxcovprivate 
-  maxcoverage <<- data.frame$maxcov # Maximum possible coverage based on OneHealth Tool
-  cases <<- data.frame$cases # Total number of cases based on OneHealth Tool
-  fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence 
+  dalys <<- data.frame$dalys # Per case DALYs averted based on CE evidence
+  fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence ('full' because this captures all costs - from the CE study -and not only drugs and commodities cost which are used as a constraint in our model)
+  drugcost <<- data.frame$drugcost #  Per case cost of drugs and commodities
+  maxcoveragechw <<- data.frame$maxcovchw # Maximum percentage of cases which can be covered by CHW
+  maxcoverageprivate <<- data.frame$maxcovprivate # Maximum percentage of cases which can be covered by private pharmacists
+  maxcoverage <<- data.frame$maxcov # Maximum possible coverage of all eligible cases
+  cases <<- data.frame$cases # Total number of eligible cases
   hrneed <<- as.data.frame(apply(data.frame[,c(8:17)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
   use_feas_constraint_chw <<- data.frame$feasconstchw
   use_feas_constraint_private <<- data.frame$feasconstprivate
@@ -59,7 +49,6 @@ find_optimal_package <- function(data.frame, # data on interventions
   ###################################
   # 3.1 Set up LPP
   ###################################
-  
   # Objective - maximize DALYs or Net Health per person X Total number of cases X Coverage
   #****************************************************
   # Define net health
@@ -69,12 +58,10 @@ find_optimal_package <- function(data.frame, # data on interventions
   # Define objective
   if (objective_input == 'nethealth'){
     objective <<- nethealth * cases
-  }
-  else if (objective_input == 'dalys'){
+  } else if (objective_input == 'dalys'){
     objective <<- dalys * cases
-  }
-  else{
-    print('ERROR: objective_input can take values dalys or nethealth')	
+  } else{
+    stop('ERROR: objective_input must be either "dalys" or "nethealth".')
   }
   
   # Constraints - 1. Drug Budget, 2. HR Requirements
