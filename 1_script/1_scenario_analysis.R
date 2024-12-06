@@ -17,9 +17,78 @@ setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/R files for constr
 # Run R script which generates LP function
 source("0_packages_and_functions_final_version2.0.R")
 
-##########################################################
-# 2 - Set up common inputs for scenarios
-##########################################################
+###################################
+# 2 - Set up inputs for LPP
+###################################
+## Load data
+#######################################################################################
+# Load CEA/cost/target population/PIN data set 
+#****************************************************
+df <- read_excel("chbp_2023_full_dataset.xls", sheet = "intervention list",col_names = TRUE,col_types=NULL,na="",skip=0)
+# Load HR availability data set
+#****************************************************
+df_hr <- read_excel("chbp_2023_full_dataset.xls", sheet = "hr constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+# Load compulsory intervention data set
+#****************************************************
+df_compulsory <- read_excel("chbp_2023_full_dataset.xls", sheet = "compulsory int",col_names = TRUE,col_types=NULL,na="",skip=0)
+# Load substitute intervention data set
+#****************************************************
+df_substitutes <- read_excel("chbp_2023_full_dataset.xls", sheet = "substitute int",col_names = TRUE,col_types=NULL,na="",skip=0)
+# Load complementary intervention data set
+#****************************************************
+df_complements <- read_excel("chbp_2023_full_dataset.xls", sheet = "complementary int",col_names = TRUE,col_types=NULL,na="",skip=0)
+
+# Set up data-frames
+#****************************************************
+df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
+
+colnames(df_hr) = df_hr[1,] #set the columns name based on first row
+
+df_hr <- df_hr %>% 
+  slice(-1) #remove the first row
+
+# Extract .csv versions of input data
+#write.csv(df, file = "3_processing/uganda_intervention_data.csv")
+#write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
+#write.csv(df_complements, file = "4_processing/uganda_hr_data.csv")
+#write.csv(df_substitutes, file = "5_processing/uganda_hr_data.csv")
+#write.csv(df_compulsory, file = "6_processing/uganda_hr_data.csv")
+
+# Set up HR constraint data frames
+#****************************************************
+hr_minutes <- df_hr %>% 
+  mutate(`Total patient-facing time per year (minutes)` = as.numeric(`Total patient-facing time per year (minutes)`)) %>% 
+  pull(`Total patient-facing time per year (minutes)`)
+
+hr_size <- df_hr %>% 
+  mutate(`Total staff` = as.numeric(`Total staff`)) %>% 
+  pull(`Total staff`)
+
+# Generate relevant lists from data set
+#****************************************************
+# Rename columns
+
+df <- df %>% dplyr::rename(
+  dalys = `DALYs averted per patient (Uganda)`, 
+  drugcost = `Average drugs and commodities cost (2023 USD)`,
+  maxcovchw = `Community health workers_coverage_2024`,
+  maxcovprivate = `Private health workers_coverage_2024`,
+  maxcov =`Maximum coverage`, 
+  fullcost = `Cost per case (Uganda) - 2023 USD`,
+  intervention = `intervention_name`,
+  cases = `Cases_full_2023`,
+  feasconstchw = `Feasibility constraint community health workers`,
+  feasconstprivate = `Feasibility constraint private health workers`,
+  intcode = `code`,
+  category = `Category`
+)
+
+N <- length(df$dalys) # total number of interventions included in the analysis
+
+# Convert columns to numeric
+df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcovchw', 'maxcovprivate', 'feasconstchw', 'maxcov', 'feasconstprivate', 'fullcost', 'cases'), as.numeric)
+str(df) # ^^ check format of all columns ^^	
+
 ## Pre-code main inputs, complements, and substitutes for the scenarios that follow 
 #######################################################################################
 #  Common function inputs
