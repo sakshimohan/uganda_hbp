@@ -18,7 +18,7 @@ library(viridis) # load viridis colour palette
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
-find_optimal_package <- function(data.frame, # data on interventions 
+find_optimal_package <- function(input_data_file, # path to excel sheet which contains all data 
                                  objective_input = "nethealth", # what is being maximised
                                  cet_input = 165, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
                                  drug_budget_input, # size of consumables budget
@@ -30,6 +30,67 @@ find_optimal_package <- function(data.frame, # data on interventions
                                  compcov_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
                                  allow_task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
 { 
+  ## Load data
+  #######################################################################################
+  # Load intervention data - cost-effectiveness + drug cost + target population + coverage constraints
+  df <- read_excel(input_data_file, sheet = "intervention list",col_names = TRUE,col_types=NULL,na="",skip=0)
+  # Load HR availability data set
+  df_hr <- read_excel(input_data_file, sheet = "hr constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+  # Load compulsory intervention list
+  df_compulsory <- read_excel(input_data_file, sheet = "compulsory int",col_names = TRUE,col_types=NULL,na="",skip=0)
+  # Load substitute intervention list
+  df_substitutes <- read_excel(input_data_file, sheet = "substitute int",col_names = TRUE,col_types=NULL,na="",skip=0)
+  # Load complementary intervention list
+  df_complements <- read_excel(input_data_file, sheet = "complementary int",col_names = TRUE,col_types=NULL,na="",skip=0)
+  
+  # Clean dataframes
+  df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
+  colnames(df_hr) = df_hr[1,] #set the columns name based on first row
+  
+  df_hr <- df_hr %>% 
+    slice(-1) #remove the first row
+  
+  # Extract .csv versions of input data to keep track of changes
+  #write.csv(df, file = "3_processing/uganda_intervention_data.csv")
+  #write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
+  #write.csv(df_complements, file = "4_processing/uganda_hr_data.csv")
+  #write.csv(df_substitutes, file = "5_processing/uganda_hr_data.csv")
+  #write.csv(df_compulsory, file = "6_processing/uganda_hr_data.csv")
+  
+  # Set up HR constraint data frames
+  # Patient-facing time needed per case per year
+  hr_minutes <- df_hr %>% 
+    mutate(`Total patient-facing time per year (minutes)` = as.numeric(`Total patient-facing time per year (minutes)`)) %>% 
+    pull(`Total patient-facing time per year (minutes)`)
+  # Size of the health workforce
+  hr_size <- df_hr %>% 
+    mutate(`Total staff` = as.numeric(`Total staff`)) %>% 
+    pull(`Total staff`)
+  
+  # Generate relevant lists from data set
+  #--------------------------------------------------------
+  # Rename columns
+  df <- df %>% dplyr::rename(
+    dalys = `DALYs averted per patient (Uganda)`, 
+    drugcost = `Average drugs and commodities cost (2023 USD)`,
+    maxcovchw = `Community health workers_coverage_2024`,
+    maxcovprivate = `Private health workers_coverage_2024`,
+    maxcov =`Maximum coverage`, 
+    fullcost = `Cost per case (Uganda) - 2023 USD`,
+    intervention = `intervention_name`,
+    cases = `Cases_full_2023`,
+    feasconstchw = `Feasibility constraint community health workers`,
+    feasconstprivate = `Feasibility constraint private health workers`,
+    intcode = `code`,
+    category = `Category`
+  )
+  
+  N <- length(df$dalys) # total number of interventions included in the analysis
+  
+  # Convert columns to numeric
+  df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcovchw', 'maxcovprivate', 'feasconstchw', 'maxcov', 'feasconstprivate', 'fullcost', 'cases'), as.numeric)
+  str(df) # ^^ check format of all columns ^^	
+  
   intervention <<- data.frame$intervention
   intcode <<- data.frame$intcode # list of intervention codes
   category <<- data.frame$category # program/category of intervention
@@ -76,38 +137,36 @@ find_optimal_package <- function(data.frame, # data on interventions
   #---------------------
   hr_minutes_need <- hrneed * cases[row(hrneed)] # HR minutes required to deliver intervention to all cases in need
   
-  # Update HR constraints so that nurses, pharmacists, medical officers, etc. represent joint constraints because the HR data
-  # found for Uganda was not detailed enough 
-  # column names have been changed  
-  colnames(hr_minutes_need)
-  medstaffmins <- hr_minutes_need %>% pull(`Medicalstaff`) # Medical officer + Clinical officer
-  nursingstaffmins <- hr_minutes_need %>% pull (`Nursingstaff`) # Medical assistant + Nurse officer + Nurse midwife
-  pharmstaffmins <- hr_minutes_need %>% pull (`Pharmaceuticalstaff`) # Pharmacist + Pharmacist Technician + Pharmacist Assistant
-  labstaffmins <- hr_minutes_need %>% pull (`Labstaff`) # Lab officer + Lab technician + Lab assistant
-  dentalstaffmins <- hr_minutes_need %>% pull (`Dentalstaff`) # Dental officer + Dental therapist + Dental assistant
-  mentalstaffmins <- hr_minutes_need %>% pull (`Mentalhealthstaff`) # Mental health staff 
-  nutristaffmins <- hr_minutes_need %>% pull (`Nutritionstaff`) # Nutrition staff
-  diagstaffmins <- hr_minutes_need %>% pull (`Radiographystaff`) # Radiographer + Radiography technician + Sonographer + Radiotherapist
-  chwstaffmins <- hr_minutes_need %>% pull (`Community health workers`) # Community health workers 
-  pvtpharmstaffmins <- hr_minutes_need %>% pull(`Private pharmacists staff`) # Private pharmacists/retail drug shop vendors
+  # Extract individual arrays for each HR constraint by cadre (Number of minutes of staff time needed per intervention)
+  medstaffmins <- hr_minutes_need %>% pull(`Medicalstaff`)
+  nursingstaffmins <- hr_minutes_need %>% pull (`Nursingstaff`) 
+  pharmstaffmins <- hr_minutes_need %>% pull (`Pharmaceuticalstaff`)
+  labstaffmins <- hr_minutes_need %>% pull (`Labstaff`)
+  dentalstaffmins <- hr_minutes_need %>% pull (`Dentalstaff`) 
+  mentalstaffmins <- hr_minutes_need %>% pull (`Mentalhealthstaff`) 
+  nutristaffmins <- hr_minutes_need %>% pull (`Nutritionstaff`) 
+  diagstaffmins <- hr_minutes_need %>% pull (`Radiographystaff`)
+  chwstaffmins <- hr_minutes_need %>% pull (`Community health workers`)
+  pvtpharmstaffmins <- hr_minutes_need %>% pull(`Private pharmacists staff`) 
   
   # Clean total minutes available per cadre  
   cons_hr.limit <- as.data.frame(hr_minutes)
-  medstaffmins.limit <<- cons_hr.limit %>% slice(1) %>% pull() # Medical officer + Clinical officer
-  nursingstaffmins.limit <<- cons_hr.limit %>% slice(2) %>% pull () # Medical assistant + Nurse officer + Nurse midwife
-  pharmstaffmins.limit <<- cons_hr.limit %>% slice(3) %>% pull () # Pharmacist + Pharmacist Technician + Pharmacist Assistant
-  labstaffmins.limit <<- cons_hr.limit %>% slice(4) %>% pull () # Lab officer + Lab technician + Lab assistant
-  dentalstaffmins.limit <<- cons_hr.limit %>% slice(5) %>% pull () # Dental officer + Dental therapist + Dental assistant  
-  mentalstaffmins.limit <<- cons_hr.limit %>% slice(6) %>% pull () # Mental health staff 
-  nutristaffmins.limit <<- cons_hr.limit %>% slice(7) %>% pull () # Nutrition staff
-  diagstaffmins.limit <<- cons_hr.limit %>% slice(8) %>% pull () # Radiographer + Radiography technician + Sonographer + Radiotherapist
-  chwstaffmins.limit <<- cons_hr.limit %>% slice(9) %>% pull () # Community health workers 
-  pvtpharmstaffmins.limit <<- cons_hr.limit %>% slice(10) %>% pull() # Private pharmacists/retail drug shop vendors
+  medstaffmins.limit <<- cons_hr.limit %>% slice(1) %>% pull() 
+  nursingstaffmins.limit <<- cons_hr.limit %>% slice(2) %>% pull () 
+  pharmstaffmins.limit <<- cons_hr.limit %>% slice(3) %>% pull ()
+  labstaffmins.limit <<- cons_hr.limit %>% slice(4) %>% pull () 
+  dentalstaffmins.limit <<- cons_hr.limit %>% slice(5) %>% pull () 
+  mentalstaffmins.limit <<- cons_hr.limit %>% slice(6) %>% pull () 
+  nutristaffmins.limit <<- cons_hr.limit %>% slice(7) %>% pull ()
+  diagstaffmins.limit <<- cons_hr.limit %>% slice(8) %>% pull ()
+  chwstaffmins.limit <<- cons_hr.limit %>% slice(9) %>% pull ()
+  pvtpharmstaffmins.limit <<- cons_hr.limit %>% slice(10) %>% pull()
   
   # Define a function which duplicates a matrix vertically
   duplicate_matrix_vertically <- function(reps, matrix){
     matrix <- do.call(rbind, replicate(reps, matrix, simplify=FALSE))
   }
+  
   #Scenario: Task shifting and other modes of health service delivery
   if (allow_other_modes_delivery == 0) {
     if (allow_task_shifting_pharm == 0) {
@@ -191,7 +250,7 @@ find_optimal_package <- function(data.frame, # data on interventions
       pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
     } 
   } else {
-    print('ERROR: ERROR: allow_other_modes_delivery and allow_task_shifting_pharm take values 0 or 1')
+    stop('ERROR: ERROR: allow_other_modes_delivery and allow_task_shifting_pharm take values 0 or 1')
   }
   
   
@@ -238,19 +297,15 @@ find_optimal_package <- function(data.frame, # data on interventions
   #--------------------------------------
   cons_hr <<- as.matrix(cons_hr)
   cons_hr.limit <<- as.matrix(cons_hr.limit)
-  dim(cons_hr) # 206 X 10
-  dim(cons_hr.limit)  # 1 X 10
+  # use dim(cons_hr) to ensure that the dimensions of the matrix are as expected
   
   # 2. Drug
   #--------------------------------------
   cons_drug <<-as.matrix(cons_drug)
   cons_drug.limit <<- as.matrix(cons_drug.limit)
-  dim(cons_drug) # = 206 X 1
-  dim(cons_drug.limit) # = 1 X 1
   
   # 3. Decision variable constraints
   #--------------------------------------
-  #cons.feascov <- diag(n)
   cons.feascov <<- diag(x = cases, n, n)
   
   if (allow_demand_constraint == 1) {
@@ -278,9 +333,6 @@ find_optimal_package <- function(data.frame, # data on interventions
   }
   
   nonneg.lim <<- as.matrix(rep(0,n))
-  dim(cons.feascov) # 
-  dim(cons.feascov.limit) # 
-  dim(nonneg.lim) # 
   
   # 4. Compulsory interventions  
   #--------------------------------------
@@ -320,7 +372,6 @@ find_optimal_package <- function(data.frame, # data on interventions
   # 5. Complementary interventions
   #--------------------------------------
   # Nested complement is delivered to a proportion of those covered by the base intervention (this proportion can be 100%)
-  
   complements.count <- nrow(df_complements)
   cons_complements.limit <<- matrix(0L, complements.count, ncol = 1)
   cons_complements <<- matrix(0L, complements.count, ncol = n) 
@@ -384,7 +435,9 @@ find_optimal_package <- function(data.frame, # data on interventions
   for (i in 1:subs.count){
     print(paste("Substitute group", i))
     print("------------------------------------------------------------")
-    
+    # Filter the data frame by group
+    current_group <- df_substitutes[df_substitutes$Group == i, ]
+    substitutes <- current_group$Substitute  # Get the intervention codes for this group
     for (k in substitutes){
       a <- which(data.frame$intcode == k)
       b <- data.frame$intervention[a]
@@ -488,7 +541,7 @@ find_optimal_package <- function(data.frame, # data on interventions
     } 
     
   } else {
-    print('ERROR: allow other modes of delivery and task_shifting_pharm can take values 0 or 1')
+    stop('ERROR: allow other modes of delivery and task_shifting_pharm can take values 0 or 1')
   }
   
   # Combine all the above constraints into one matrix
@@ -500,7 +553,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   print(paste("Dimension - Substitutes constraint:", paste( unlist(dim(t(cons_substitutes))), collapse=' ')))
   print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
   
-  #Generate cons.mat based on whether other modes of delivery or task shifting is allowed (LHS)
+  # Generate cons.mat based on whether other modes of delivery or task shifting is allowed (LHS)
   if (allow_other_modes_delivery == 1) {
     if (allow_task_shifting_pharm == 1) {
       cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
@@ -515,7 +568,7 @@ find_optimal_package <- function(data.frame, # data on interventions
     }
   }
   
-  #Generate constraints matrix (limits) based on whether other modes of delivery or task shifting is allowed (RHS)
+  # Generate constraints matrix (limits) based on whether other modes of delivery or task shifting is allowed (RHS)
   if (allow_other_modes_delivery == 1) {
     if (allow_task_shifting_pharm == 1) {
       cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS

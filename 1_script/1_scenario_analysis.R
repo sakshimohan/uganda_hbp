@@ -12,89 +12,21 @@
 ##########################################################
 # 1 - Set Working Directory & and Run LP function Script
 ##########################################################
-# Point to where the data is stored on your machine
+# Point to where the repo is stored on your machine
 #setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/R files for constrained optimization/")
-setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/2_data") 
+setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp") 
 
 # Run R script which generates LP function
-source("0_packages_and_functions_final_version2.0.R")
+source("1_script/0_packages_and_functions.R")
 
 ###################################
 # 2 - Set up inputs for LPP
 ###################################
-## Load data
-#######################################################################################
-# Load CEA/cost/target population/PIN data set 
-#****************************************************
-df <- read_excel("chbp_2023_full_dataset.xls", sheet = "intervention list",col_names = TRUE,col_types=NULL,na="",skip=0)
-# Load HR availability data set
-#****************************************************
-df_hr <- read_excel("chbp_2023_full_dataset.xls", sheet = "hr constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
-# Load compulsory intervention data set
-#****************************************************
-df_compulsory <- read_excel("chbp_2023_full_dataset.xls", sheet = "compulsory int",col_names = TRUE,col_types=NULL,na="",skip=0)
-# Load substitute intervention data set
-#****************************************************
-df_substitutes <- read_excel("chbp_2023_full_dataset.xls", sheet = "substitute int",col_names = TRUE,col_types=NULL,na="",skip=0)
-# Load complementary intervention data set
-#****************************************************
-df_complements <- read_excel("chbp_2023_full_dataset.xls", sheet = "complementary int",col_names = TRUE,col_types=NULL,na="",skip=0)
-
-# Set up data-frames
-#****************************************************
-df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
-
-colnames(df_hr) = df_hr[1,] #set the columns name based on first row
-
-df_hr <- df_hr %>% 
-  slice(-1) #remove the first row
-
-# Extract .csv versions of input data
-#write.csv(df, file = "3_processing/uganda_intervention_data.csv")
-#write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
-#write.csv(df_complements, file = "4_processing/uganda_hr_data.csv")
-#write.csv(df_substitutes, file = "5_processing/uganda_hr_data.csv")
-#write.csv(df_compulsory, file = "6_processing/uganda_hr_data.csv")
-
-# Set up HR constraint data frames
-#****************************************************
-hr_minutes <- df_hr %>% 
-  mutate(`Total patient-facing time per year (minutes)` = as.numeric(`Total patient-facing time per year (minutes)`)) %>% 
-  pull(`Total patient-facing time per year (minutes)`)
-
-hr_size <- df_hr %>% 
-  mutate(`Total staff` = as.numeric(`Total staff`)) %>% 
-  pull(`Total staff`)
-
-# Generate relevant lists from data set
-#****************************************************
-# Rename columns
-
-df <- df %>% dplyr::rename(
-  dalys = `DALYs averted per patient (Uganda)`, 
-  drugcost = `Average drugs and commodities cost (2023 USD)`,
-  maxcovchw = `Community health workers_coverage_2024`,
-  maxcovprivate = `Private health workers_coverage_2024`,
-  maxcov =`Maximum coverage`, 
-  fullcost = `Cost per case (Uganda) - 2023 USD`,
-  intervention = `intervention_name`,
-  cases = `Cases_full_2023`,
-  feasconstchw = `Feasibility constraint community health workers`,
-  feasconstprivate = `Feasibility constraint private health workers`,
-  intcode = `code`,
-  category = `Category`
-)
-
-N <- length(df$dalys) # total number of interventions included in the analysis
-
-# Convert columns to numeric
-df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcovchw', 'maxcovprivate', 'feasconstchw', 'maxcov', 'feasconstprivate', 'fullcost', 'cases'), as.numeric)
-str(df) # ^^ check format of all columns ^^	
-
 ## Pre-code main inputs, complements, and substitutes for the scenarios that follow 
 #######################################################################################
 #  Common function inputs
 #------------------------
+chosen_data_file <- "2_data/chbp_2023_full_dataset.xls"
 chosen_df <- df
 base.cet <- 165 # This value is in 2023 USD 
 base.drugbudget <- 600000000 #subject to change after MakSPH inputs
@@ -116,7 +48,7 @@ visible_cadres = c(1:3,5:10) # showing all cadres except the dental staff
 
 
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = no.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = no.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
                        hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)  
@@ -129,7 +61,7 @@ scen1_coverage = solution
 # Scenario 2: CET = 0.5 X GDP per capita
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = 0.5 * gdp_pc, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = 0.5 * gdp_pc, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
                        hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)
@@ -141,7 +73,7 @@ scen2_coverage = solution
 # Scenario 3: CET = $165
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
                        hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)
@@ -153,7 +85,7 @@ scen3_coverage = solution
 # Scenario 4: CET = $165 + Drug budget constraint
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)
@@ -165,7 +97,7 @@ scen4_coverage = solution
 # Scenario 5: CET = $165 + Drug budget constraint + HR capacity constraint 
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)
@@ -177,7 +109,7 @@ scen5_coverage = solution
 # Scenario 6: CET = $165 + Drug budget constraint + Other modes of delivery + HR capacity constraint 
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 0)
@@ -189,7 +121,7 @@ scen6_coverage = solution
 #Scenario 7: CET = $165 + Drug budget constraint + HR capacity (with task shifting) 
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
                        allow_task_shifting_pharm = 1)
@@ -201,7 +133,7 @@ scen7_coverage = solution
 # Scenario 8: CET = $165 + Drug budget constraint + Other modes of delivery + HR capacity constraint (with task shifting) 
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
-  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
                        hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
                        allow_task_shifting_pharm = 1)
@@ -212,7 +144,7 @@ scen8_coverage = solution
 # Scenario 9: CET = $165 + Other modes of delivery + HR capacity constraint (with task shifting) (Unlimited Budget)
 #----------------------------------------------------------------------------------------------------------------------------
 #capture.output(
-#  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+#  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
 #                       drug_budget_input = no.drugbudget.limit, drug_budget.scale = 1, 
 #                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
@@ -223,7 +155,7 @@ scen8_coverage = solution
 # Scenario 9: CET = $165 + Drug budget constraint + Other modes of delivery + Demand constraint [Optional]
 #----------------------------------------------------------------------------------------------------------------------------
 #capture.output(
-#  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+#  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
 #                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
 #                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
@@ -234,7 +166,7 @@ scen8_coverage = solution
 # Scenario 10: CET = $165 + Drug budget constraint + Other modes of delivery +  Demand constraint + HR capacity constraint (No pharmacist constraint) [Optional]
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
-#  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+#  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
 #                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
 #                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
@@ -245,7 +177,7 @@ scen8_coverage = solution
 # Scenario 11: CET = $165 + Drug budget constraint + Other modes of delivery + Demand constraint + HR capacity constraint [Optional]
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
-#  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+#  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
 #                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
 #                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
@@ -256,7 +188,7 @@ scen8_coverage = solution
 # Scenario 12: CET = $165 + Drug budget constraint + Other modes of delivery + Demand constraint + HR capacity constraint (with task shifting) [Optional]
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
-#  find_optimal_package(data.frame = chosen_df, objective_input = 'nethealth', cet_input = base.cet, 
+#  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
 #                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
 #                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
