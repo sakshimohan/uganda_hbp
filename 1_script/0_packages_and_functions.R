@@ -91,19 +91,19 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcovchw', 'maxcovprivate', 'feasconstchw', 'maxcov', 'feasconstprivate', 'fullcost', 'cases'), as.numeric)
   str(df) # ^^ check format of all columns ^^	
   
-  intervention <<- data.frame$intervention
-  intcode <<- data.frame$intcode # list of intervention codes
-  category <<- data.frame$category # program/category of intervention
-  dalys <<- data.frame$dalys # Per case DALYs averted based on CE evidence
-  fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence ('full' because this captures all costs - from the CE study -and not only drugs and commodities cost which are used as a constraint in our model)
-  drugcost <<- data.frame$drugcost #  Per case cost of drugs and commodities
-  maxcoveragechw <<- data.frame$maxcovchw # Maximum percentage of cases which can be covered by CHW
-  maxcoverageprivate <<- data.frame$maxcovprivate # Maximum percentage of cases which can be covered by private pharmacists
-  maxcoverage <<- data.frame$maxcov # Maximum possible coverage of all eligible cases
-  cases <<- data.frame$cases # Total number of eligible cases
-  hrneed <<- as.data.frame(apply(data.frame[,c(8:17)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
-  use_feas_constraint_chw <<- data.frame$feasconstchw
-  use_feas_constraint_private <<- data.frame$feasconstprivate
+  intervention <<- df$intervention
+  intcode <<- df$intcode # list of intervention codes
+  category <<- df$category # program/category of intervention
+  dalys <<- df$dalys # Per case DALYs averted based on CE evidence
+  fullcost <<- df$fullcost # Full cost per patient based on CE evidence ('full' because this captures all costs - from the CE study -and not only drugs and commodities cost which are used as a constraint in our model)
+  drugcost <<- df$drugcost #  Per case cost of drugs and commodities
+  maxcoveragechw <<- df$maxcovchw # Maximum percentage of cases which can be covered by CHW
+  maxcoverageprivate <<- df$maxcovprivate # Maximum percentage of cases which can be covered by private pharmacists
+  maxcoverage <<- df$maxcov # Maximum possible coverage of all eligible cases
+  cases <<- df$cases # Total number of eligible cases
+  hrneed <<- as.data.frame(apply(df[,c(8:17)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
+  use_feas_constraint_chw <<- df$feasconstchw
+  use_feas_constraint_private <<- df$feasconstprivate
   
   n <- length(dalys) # number of interventions included in the analysis
   
@@ -345,8 +345,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     # Loop through the compulsory interventions  
     for (i in 1:comp.count) {
       # Find the index of the intervention in the data.frame
-      a <- which(data.frame$intcode == df_compulsory$`compulsory intervention`[i])
-      b <- data.frame$intervention[a]
+      a <- which(df$intcode == df_compulsory$`compulsory intervention`[i])
+      b <- df$intervention[a]
       # Update the constraint matrix
       cons_compulsory[i, a] <<- cases[a]
       # Add the new conditional logic for the limit
@@ -381,12 +381,12 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       print(paste("Nested complements group", i))
       print("------------------------------------------------------------")  
       # Retrieve base intervention codes from the data frame 
-      base <- which(data.frame$intcode == df_complements$`Base intervention`[i])
-      base_intervention <- data.frame$intervention[base]
+      base <- which(df$intcode == df_complements$`Base intervention`[i])
+      base_intervention <- df$intervention[base]
       cases_base <- cases[base]
       # Retrieve nested intervention codes from the data frame
-      nested_intervention_location <- which(data.frame$intcode == df_complements$`Nested intervention`[i])
-      nested_intervention <- data.frame$intervention[nested_intervention_location]
+      nested_intervention_location <- which(df$intcode == df_complements$`Nested intervention`[i])
+      nested_intervention <- df$intervention[nested_intervention_location]
       #Print information 
       print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", nested_intervention, "; Code: ", df_complements$`Nested intervention`[i] , "; (Proportion: ",as.numeric(df_complements$Proportion[i]), ")"))
       #Apply the proportion for the base intervention and set complement constraint 
@@ -415,7 +415,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     substitutes <- current_group$Substitute  # Get the intervention codes for this group
     
     for (k in substitutes){
-      a <- which(data.frame$intcode == k)
+      a <- which(df$intcode == k)
       
       if (allow_demand_constraint == 1){
         cases_max <- min(cases[a] * maxcoverage[a] * feascov_scale, cases[a])
@@ -437,8 +437,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     current_group <- df_substitutes[df_substitutes$Group == i, ]
     substitutes <- current_group$Substitute  # Get the intervention codes for this group
     for (k in substitutes){
-      a <- which(data.frame$intcode == k)
-      b <- data.frame$intervention[a]
+      a <- which(df$intcode == k)
+      b <- df$intervention[a]
       
       cons_substitutes[i,a] <<- cases[a] 
       cons_substitutes.limit[i] <<- subsgrp_casesmax[i]
@@ -641,7 +641,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   #solution_hf <- solution.df[1:length(intcode), "solution"]
   #solution_chw <- solution.df[(length(intcode) + 1):(2 * length(intcode)), "solution"]
   #solution_pvt <- solution.df[(2 * length(intcode) + 1):(3 * length(intcode)), "solution"]
-  #solution_alt_models <- data.frame(intcode, solution_hr, solution_chw, solution_pvt)
+  #solution_alt_models <- df(intcode, solution_hr, solution_chw, solution_pvt)
   
   # Number of interventions with a positive net health impact
   pos_nethealth.count <<- sum(nethealth > 0) # this seems to be one less than the figure in the excel
@@ -701,12 +701,12 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   
   # Cost-effectiveness Threshold
   icer <- fullcost/dalys
-  temp <- cbind.data.frame(icer, solution, data.frame$intervention)
+  temp <- cbind.data.frame(icer, solution, df$intervention)
   temp['solution'] =  as.numeric(temp[[2]])
   temp['icer'] =  as.numeric(temp[[1]])
   cet_soln <<- round(max(temp['icer'][temp['solution'] > 0]),2) # previously temp$icer[temp$solution > 0]
   a <- which(icer == max(temp['icer'][temp['solution'] > 0])) # to check which included intervention has the highest ICER
-  least.ce.intervention <- data.frame$intervention[a]
+  least.ce.intervention <- df$intervention[a]
   
   # Summarised list of outputs printed upon running the fucntion
   outputs <- list("Total number of interventions in consideration" = length(dalys), 
