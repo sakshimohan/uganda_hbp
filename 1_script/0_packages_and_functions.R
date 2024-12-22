@@ -21,8 +21,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
                                  objective_input = "nethealth", # what is being maximised
                                  cet_input = 165, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
                                  drug_budget_input, # size of consumables budget
-                                 drug_budget.scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
-                                 hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
+                                 drug_budget_scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
+                                 hr_scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
                                  allow_demand_constraint = 0, # whether maximum feasible coverage constraints should be applied (default set to 0)
                                  allow_other_modes_delivery = 0, # whether other modes of delivery should be allowed 
                                  max_feasible_coverage_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
@@ -129,7 +129,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   # 1. Drug Budget
   #----------------
   cons_drug <<- drugcost * cases # Cost of drugs for the number of cases covered
-  cons_drug.limit <<- drug_budget_input * drug_budget.scale
+  cons_drug.limit <<- drug_budget_input * drug_budget_scale
   cons_drug.limit_base <<- drug_budget_input # un-scaled drug budget
   
   # 2. HR Constraints
@@ -266,17 +266,17 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   chwstaff.limit <- hr_size.limit %>% slice(9) %>% pull()
   pvtpharmstaff.limit <- hr_size.limit %>% slice(10) %>% pull()
   
-  hr.scale <- as.data.frame(hr.scale)
-  medstaff.scale <- hr.scale %>% slice(1) %>% pull()
-  nursestaff.scale <- hr.scale %>% slice(2) %>% pull()
-  pharmstaff.scale <- hr.scale %>% slice(3) %>% pull()
-  labstaff.scale <- hr.scale %>% slice(4) %>% pull()
-  dentalstaff.scale <- hr.scale %>% slice(5) %>% pull()
-  mentalstaff.scale <- hr.scale %>% slice(6) %>% pull()
-  nutristaff.scale <- hr.scale %>% slice(7) %>% pull()
-  diagstaff.scale <- hr.scale %>% slice(8) %>% pull() 
-  chwstaff.scale <- hr.scale %>% slice(9) %>% pull()
-  pvtpharmstaff.scale <- hr.scale %>% slice(10) %>% pull()
+  hr_scale <- as.data.frame(hr_scale)
+  medstaff.scale <- hr_scale %>% slice(1) %>% pull()
+  nursestaff.scale <- hr_scale %>% slice(2) %>% pull()
+  pharmstaff.scale <- hr_scale %>% slice(3) %>% pull()
+  labstaff.scale <- hr_scale %>% slice(4) %>% pull()
+  dentalstaff.scale <- hr_scale %>% slice(5) %>% pull()
+  mentalstaff.scale <- hr_scale %>% slice(6) %>% pull()
+  nutristaff.scale <- hr_scale %>% slice(7) %>% pull()
+  diagstaff.scale <- hr_scale %>% slice(8) %>% pull() 
+  chwstaff.scale <- hr_scale %>% slice(9) %>% pull()
+  pvtpharmstaff.scale <- hr_scale %>% slice(10) %>% pull()
   
   # Each list here represents the number of staff (of each cadre) needed to deliver each intervention to all cases in need. 
   # E.g. for each cesarean section, 45 minutes of medical staff's time is needed (or 104,200 minutes for 2316 cases). On average 39,900 minutes are available per medical staff each year (257.3 million minutes in total divided by 6,400 medical staff). This means that for 2136 cases, 2.16 medical staff are needed (2316*45/(257.3m/6400))
