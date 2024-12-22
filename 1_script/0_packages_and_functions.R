@@ -5,7 +5,6 @@
 library(readxl)
 library(lpSolve)
 library(fmsb) # for radar chart
-#library(plyr)
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -27,7 +26,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
                                  allow_demand_constraint = 0, # whether maximum feasible coverage constraints should be applied (default set to 0)
                                  allow_other_modes_delivery = 0, # whether other modes of delivery should be allowed 
                                  feascov_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
-                                 compcov_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
+                                 compulsory_intervention_coverage_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
                                  allow_task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
 { 
   ## Load data
@@ -351,7 +350,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_compulsory[i, a] <<- cases[a]
       # Add the new conditional logic for the limit
       if (allow_demand_constraint == 1) {
-        cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compcov_scale, cases[a])
+        cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compulsory_intervention_coverage_scale, cases[a])
       } else {
         cons_compulsory.limit[i] <<- cases[a]
       }
