@@ -49,8 +49,8 @@ visible_cadres = c(1:3,5:10) # showing all cadres except the dental staff
 
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = no.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
-                       hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = no.drugbudget.limit, 
+                       hr_scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)  
 )
 drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
@@ -62,8 +62,8 @@ scen1_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = 0.5 * gdp_pc, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
-                       hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = no.drugbudget.limit, 
+                       hr_scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)
 )
 drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
@@ -74,8 +74,8 @@ scen2_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = no.drugbudget.limit, 
-                       hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = no.drugbudget.limit, 
+                       hr_scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)
 )
 drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
@@ -86,8 +86,8 @@ scen3_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-                       hr.scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                       hr_scale = no.hr.limit, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)
 )
 scen4 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -98,8 +98,8 @@ scen4_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-                       hr.scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                       hr_scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)
 )
 scen5 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -110,8 +110,8 @@ scen5_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 0)
 )
 scen6 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -122,8 +122,8 @@ scen6_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-                       hr.scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1,
+                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                       hr_scale = base.hr, allow_other_modes_delivery = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1,
                        allow_task_shifting_pharm = 1)
 )
 scen7 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -134,8 +134,8 @@ scen7_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
                        allow_task_shifting_pharm = 1)
 )
 scen8 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -145,8 +145,8 @@ scen8_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 #capture.output(
 #  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-#                       drug_budget_input = no.drugbudget.limit, drug_budget.scale = 1, 
-#                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+#                       drug_budget_input = no.drugbudget.limit, drug_budget_scale = 1, 
+#                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
 #)
 #scen9 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -156,8 +156,8 @@ scen8_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------
 #capture.output(
 #  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-#                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-#                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+#                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+#                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
 #)
 #scen9 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -167,8 +167,8 @@ scen8_coverage = solution
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
 #  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-#                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-#                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+#                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+#                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
 #)
 #scen10 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -178,8 +178,8 @@ scen8_coverage = solution
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
 #  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-#                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-#                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+#                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+#                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
 #)
 #scen11 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
@@ -189,8 +189,8 @@ scen8_coverage = solution
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 #capture.output(
 #  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-#                       drug_budget_input = base.drugbudget, drug_budget.scale = 1, 
-#                       hr.scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, feascov_scale = 1, compcov_scale = 1, 
+#                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+#                       hr_scale = base.hr, allow_other_modes_delivery = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1, compulsory_intervention_coverage_scale = 1, 
 #                       allow_task_shifting_pharm = 1)
 #)
 #scen12 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
