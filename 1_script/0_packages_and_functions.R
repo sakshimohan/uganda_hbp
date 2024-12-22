@@ -25,7 +25,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
                                  hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
                                  allow_demand_constraint = 0, # whether maximum feasible coverage constraints should be applied (default set to 0)
                                  allow_other_modes_delivery = 0, # whether other modes of delivery should be allowed 
-                                 feascov_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
+                                 max_feasible_coverage_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
                                  compulsory_intervention_coverage_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
                                  allow_task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
 { 
@@ -310,12 +310,12 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   if (allow_demand_constraint == 1) {
     if (allow_other_modes_delivery == 1) {
       cons.feascov.limit <<- rbind(
-        as.matrix(pmin(maxcoverage * feascov_scale * cases, cases)),
+        as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases)),
         as.matrix(cases * use_feas_constraint_chw * maxcoveragechw),
         as.matrix(cases * use_feas_constraint_private * maxcoverageprivate)
       )
     } else if (allow_other_modes_delivery == 0) {
-      cons.feascov.limit <<- as.matrix(pmin(maxcoverage * feascov_scale * cases, cases))
+      cons.feascov.limit <<- as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases))
     }
   } else if (allow_demand_constraint == 0) {
     if (allow_other_modes_delivery == 1) {
@@ -350,7 +350,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_compulsory[i, a] <<- cases[a]
       # Add the new conditional logic for the limit
       if (allow_demand_constraint == 1) {
-        cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compulsory_intervention_coverage_scale, cases[a])
+        cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * max_feasible_coverage_scale * compulsory_intervention_coverage_scale, cases[a])
       } else {
         cons_compulsory.limit[i] <<- cases[a]
       }
@@ -417,7 +417,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       a <- which(df$intcode == k)
       
       if (allow_demand_constraint == 1){
-        cases_max <- min(cases[a] * maxcoverage[a] * feascov_scale, cases[a])
+        cases_max <- min(cases[a] * maxcoverage[a] * max_feasible_coverage_scale, cases[a])
       }
       else if (allow_demand_constraint == 0){
         cases_max <- cases[a]
