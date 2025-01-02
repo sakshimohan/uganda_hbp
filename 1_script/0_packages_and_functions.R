@@ -24,10 +24,12 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
                                  drug_budget_scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
                                  hr_scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
                                  allow_demand_constraint = 0, # whether maximum feasible coverage constraints should be applied (default set to 0)
-                                 allow_other_modes_delivery = 0, # whether other modes of delivery should be allowed 
+                                 allow_chw_delivery = 0, # whether other CHWs should be allowed
+                                 allow_pvtpharm_delivery =0, #whether private pharmacists should be allowed
+                                 allow_markup = 0, #whether private sector mark up should be allowed
                                  max_feasible_coverage_scale = 1, # whether maximum feasible coverage constraints should be scaled up or down
                                  compulsory_intervention_coverage_scale = 1, # use this to scale maximum feasible coverage constraints for compulsory interventions up or down (1 -> no scaling applied) - this is applied to maximum feasible coverage if use_feasiblecov_constraint = 1
-                                 allow_task_shifting_pharm = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
+                                 allow_task_shifting = 0) # whether task shifting is allowed (from pharmacists and nutrition officers to nurses)
 { 
   ## Load data
   #######################################################################################
@@ -166,9 +168,9 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     matrix <- do.call(rbind, replicate(reps, matrix, simplify=FALSE))
   }
   
-  #Scenario: Task shifting and other modes of health service delivery
-  if (allow_other_modes_delivery == 0) {
-    if (allow_task_shifting_pharm == 0) {
+  #Scenario: Facility based delivery, allowing for CHW involvement, Private pharmacist involvement, and task shifting 
+  if (allow_chw_delivery == 0 & allow_pvtpharm_delivery==0) {
+    if (allow_task_shifting == 0) {
       nursingstaff <- nursingstaffmins
       medstaff <- medstaffmins
       pharmstaff <- pharmstaffmins
@@ -179,7 +181,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       diagstaff <- diagstaffmins
       chwstaff <- as.matrix(rep(0,N)) # will create a null matrix 
       pvtpharmstaff <- as.matrix(rep(0,N)) # will create a null matrix 
-    } else if (allow_task_shifting_pharm == 1){
+    } else if (allow_task_shifting == 1){
       reps <- 4 # set the number of times that the matrix of interventions is duplicated
       nursingstaff <- rbind(as.matrix(nursingstaffmins), as.matrix(nursingstaffmins + pharmstaffmins), as.matrix(nursingstaffmins + nutristaffmins), as.matrix(nursingstaffmins + nutristaffmins + pharmstaffmins))
       medstaff <- duplicate_matrix_vertically(reps,as.matrix(medstaffmins))
@@ -192,8 +194,110 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       chwstaff <- duplicate_matrix_vertically(reps,as.matrix(rep(0,N))) # will replicate a null matrix 
       pvtpharmstaff <- duplicate_matrix_vertically(reps,as.matrix(rep(0,N))) # will replicate a null matrix 
     } 
-  } else if (allow_other_modes_delivery == 1){
-    if (allow_task_shifting_pharm == 0) {
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==0){
+    if (allow_task_shifting == 0) {
+      # Estimate the total time spent for HF based cadres and time to be redistributed by CHW involvement 
+      total_time_spent <- nursingstaffmins + medstaffmins + pharmstaffmins + labstaffmins + dentalstaffmins + mentalstaffmins + nutristaffmins + diagstaffmins
+      #Estimates remaining time to re-distribute. If remaining time is greater than zero, then it redistributes, otherwise if negative (CHW time is higher than total time spent), then there is no need for redistribution
+      time_to_redistribute <- ifelse(total_time_spent - chwstaffmins > 0, total_time_spent - chwstaffmins, 0)
+      
+      # set the number of times that the matrix of interventions is duplicated
+      reps <- 2 
+      nursingstaff <- rbind(as.matrix(nursingstaffmins), as.matrix((nursingstaffmins/total_time_spent)*time_to_redistribute))
+      nursingstaff <- ifelse(is.nan(nursingstaff), 0, nursingstaff)
+      medstaff <- rbind(as.matrix(medstaffmins), as.matrix((medstaffmins/total_time_spent)*time_to_redistribute))
+      medstaff <- ifelse(is.nan(medstaff), 0, medstaff)
+      pharmstaff <- rbind(as.matrix(pharmstaffmins), as.matrix((pharmstaffmins/total_time_spent)*time_to_redistribute))
+      pharmstaff <- ifelse(is.nan(pharmstaff), 0, pharmstaff)
+      labstaff <- rbind(as.matrix(labstaffmins), as.matrix((labstaffmins/total_time_spent)*time_to_redistribute))
+      labstaff <- ifelse(is.nan(labstaff), 0, labstaff)
+      dentalstaff <- duplicate_matrix_vertically(reps,as.matrix(dentalstaffmins))
+      dentalstaff <- ifelse(is.nan(dentalstaff), 0, dentalstaff)
+      mentalstaff <-  rbind(as.matrix(mentalstaffmins), as.matrix((mentalstaffmins/total_time_spent)*time_to_redistribute))
+      mentalstaff <- ifelse(is.nan(mentalstaff), 0, mentalstaff)
+      nutristaff <-  rbind(as.matrix(nutristaffmins), as.matrix((nutristaffmins/total_time_spent)*time_to_redistribute))
+      nutristaff <- ifelse(is.nan(nutristaff), 0, nutristaff)
+      diagstaff <- rbind(as.matrix(diagstaffmins), as.matrix((diagstaffmins/total_time_spent)*time_to_redistribute))
+      diagstaff <- ifelse(is.nan(diagstaff), 0, diagstaff)
+      chwstaff <- rbind(as.matrix(rep(0,N)), as.matrix(chwstaffmins)) # will include time spent only for the CHW version of the intervention 
+      chwstaff <- ifelse(is.nan(chwstaff), 0, chwstaff)
+      pvtpharmstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N))) #No involvement of private pharmacist
+      pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
+    } else if (allow_task_shifting == 1){
+      # Estimate the total time spent for HF based cadres and time to be redistributed by CHW involvement
+      total_time_spent <- nursingstaffmins + medstaffmins + pharmstaffmins + labstaffmins + dentalstaffmins + mentalstaffmins + nutristaffmins + diagstaffmins
+      time_to_redistribute <- ifelse(total_time_spent - chwstaffmins > 0, total_time_spent - chwstaffmins, 0)
+      # set the number of times that the matrix of interventions is duplicated
+      reps <- 5  
+      nursingstaff <- rbind(as.matrix(nursingstaffmins), as.matrix(nursingstaffmins + pharmstaffmins), as.matrix(nursingstaffmins + nutristaffmins), as.matrix(nursingstaffmins + nutristaffmins + pharmstaffmins), as.matrix((nursingstaffmins/total_time_spent)*time_to_redistribute))
+      nursingstaff <- ifelse(is.nan(nursingstaff), 0, nursingstaff)
+      medstaff <- rbind(as.matrix(medstaffmins),as.matrix(medstaffmins),as.matrix(medstaffmins),as.matrix(medstaffmins), as.matrix((medstaffmins/total_time_spent)*time_to_redistribute))
+      medstaff <- ifelse(is.nan(medstaff), 0, medstaff)
+      pharmstaff <- rbind(as.matrix(pharmstaffmins), as.matrix(rep(0,N)), as.matrix(pharmstaffmins), as.matrix(rep(0,N)), as.matrix((pharmstaffmins/total_time_spent)*time_to_redistribute))
+      pharmstaff <- ifelse(is.nan(pharmstaff), 0, pharmstaff)
+      labstaff <- rbind(as.matrix(labstaffmins),as.matrix(labstaffmins),as.matrix(labstaffmins),as.matrix(labstaffmins), as.matrix((labstaffmins/total_time_spent)*time_to_redistribute))
+      labstaff <- ifelse(is.nan(labstaff), 0, labstaff)
+      dentalstaff <- duplicate_matrix_vertically(reps,as.matrix(dentalstaffmins))
+      dentalstaff <- ifelse(is.nan(dentalstaff), 0, dentalstaff)
+      mentalstaff <- rbind(as.matrix(mentalstaffmins),as.matrix(mentalstaffmins),as.matrix(mentalstaffmins),as.matrix(mentalstaffmins), as.matrix((mentalstaffmins/total_time_spent)*time_to_redistribute))
+      mentalstaff <- ifelse(is.nan(mentalstaff), 0, mentalstaff)
+      nutristaff <- rbind(as.matrix(nutristaffmins), as.matrix(nutristaffmins), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix((nutristaffmins/total_time_spent)*time_to_redistribute))
+      nutristaff <- ifelse(is.nan(nutristaff), 0, nutristaff)
+      diagstaff <- rbind(as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix((diagstaffmins/total_time_spent)*time_to_redistribute))
+      diagstaff <- ifelse(is.nan(diagstaff), 0, diagstaff)
+      chwstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(chwstaffmins)) # will include time spent only for the CHW version of the intervention 
+      chwstaff <- ifelse(is.nan(chwstaff), 0, chwstaff)
+      pvtpharmstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)),as.matrix(rep(0,N))) # will include time spent only for the Private pharmacist version of the intervention
+      pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
+    } 
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery==1){
+    if (allow_task_shifting == 0) {
+      reps <- 2
+      nursingstaff <- rbind(as.matrix(nursingstaffmins), as.matrix(nursingstaffmins))
+      #nursingstaff <- ifelse(is.nan(nursingstaff), 0, nursingstaff)
+      medstaff <- rbind(as.matrix(medstaffmins), as.matrix(medstaffmins))
+      #medstaff <- ifelse(is.nan(medstaff), 0, medstaff)
+      pharmstaff <- rbind(as.matrix(pharmstaffmins), as.matrix(pharmstaffmins*(1-use_feas_constraint_private)))
+      #pharmstaff <- ifelse(is.nan(pharmstaff), 0, pharmstaff)
+      labstaff <- rbind(as.matrix(labstaffmins), as.matrix(labstaffmins))
+      #labstaff <- ifelse(is.nan(labstaff), 0, labstaff)
+      dentalstaff <- duplicate_matrix_vertically(reps,as.matrix(dentalstaffmins))
+      #dentalstaff <- ifelse(is.nan(dentalstaff), 0, dentalstaff)
+      mentalstaff <-  rbind(as.matrix(mentalstaffmins), as.matrix(mentalstaffmins))
+      #mentalstaff <- ifelse(is.nan(mentalstaff), 0, mentalstaff)
+      nutristaff <-  rbind(as.matrix(nutristaffmins), as.matrix(nutristaffmins))
+      #nutristaff <- ifelse(is.nan(nutristaff), 0, nutristaff)
+      diagstaff <- rbind(as.matrix(diagstaffmins), as.matrix(diagstaffmins))
+      #diagstaff <- ifelse(is.nan(diagstaff), 0, diagstaff)
+      chwstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N))) # no involvement of chws  
+      #chwstaff <- ifelse(is.nan(chwstaff), 0, chwstaff)
+      pvtpharmstaff <- rbind(as.matrix(rep(0,N)), as.matrix(pvtpharmstaffmins*use_feas_constraint_private)) # substituting for facility based pharmacist staff (assumption); rest of the other cadres remain unchanged in terms of need. 
+      #pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
+    } else if (allow_task_shifting == 1){
+      reps <- 5  
+      nursingstaff <- rbind(as.matrix(nursingstaffmins), as.matrix(nursingstaffmins + pharmstaffmins), as.matrix(nursingstaffmins + nutristaffmins), as.matrix(nursingstaffmins + nutristaffmins + pharmstaffmins), as.matrix(nursingstaffmins))
+      #nursingstaff <- ifelse(is.nan(nursingstaff), 0, nursingstaff)
+      medstaff <- rbind(as.matrix(medstaffmins),as.matrix(medstaffmins),as.matrix(medstaffmins),as.matrix(medstaffmins), as.matrix(medstaffmins))
+      #medstaff <- ifelse(is.nan(medstaff), 0, medstaff)
+      pharmstaff <- rbind(as.matrix(pharmstaffmins), as.matrix(rep(0,N)), as.matrix(pharmstaffmins), as.matrix(rep(0,N)), as.matrix(pharmstaffmins*(1-use_feas_constraint_private)))
+      #pharmstaff <- ifelse(is.nan(pharmstaff), 0, pharmstaff)
+      labstaff <- rbind(as.matrix(labstaffmins),as.matrix(labstaffmins),as.matrix(labstaffmins),as.matrix(labstaffmins), as.matrix(labstaffmins))
+      #labstaff <- ifelse(is.nan(labstaff), 0, labstaff)
+      dentalstaff <- duplicate_matrix_vertically(reps,as.matrix(dentalstaffmins))
+      #dentalstaff <- ifelse(is.nan(dentalstaff), 0, dentalstaff)
+      mentalstaff <- rbind(as.matrix(mentalstaffmins),as.matrix(mentalstaffmins),as.matrix(mentalstaffmins),as.matrix(mentalstaffmins), as.matrix(mentalstaffmins))
+      #mentalstaff <- ifelse(is.nan(mentalstaff), 0, mentalstaff)
+      nutristaff <- rbind(as.matrix(nutristaffmins), as.matrix(nutristaffmins), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(nutristaffmins))
+      #nutristaff <- ifelse(is.nan(nutristaff), 0, nutristaff)
+      diagstaff <- rbind(as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix(diagstaffmins), as.matrix(diagstaffmins))
+      #diagstaff <- ifelse(is.nan(diagstaff), 0, diagstaff)
+      chwstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N))) # will include time spent only for the CHW version of the intervention 
+      #chwstaff <- ifelse(is.nan(chwstaff), 0, chwstaff)
+      pvtpharmstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(pvtpharmstaffmins*use_feas_constraint_private)) # will include time spent only for the Private pharmacist version of the intervention
+      #pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
+    }
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==1){
+    if (allow_task_shifting == 0) {
       # Estimate the total time spent for HF based cadres and time to be redistributed by CHW involvement 
       total_time_spent <- nursingstaffmins + medstaffmins + pharmstaffmins + labstaffmins + dentalstaffmins + mentalstaffmins + nutristaffmins + diagstaffmins
       #Estimates remaining time to re-distribute. If remaining time is greater than zero, then it redistributes, otherwise if negative (CHW time is higher than total time spent), then there is no need for redistribution
@@ -221,7 +325,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       chwstaff <- ifelse(is.nan(chwstaff), 0, chwstaff)
       pvtpharmstaff <- rbind(as.matrix(rep(0,N)), as.matrix(rep(0,N)), as.matrix(pvtpharmstaffmins*use_feas_constraint_private)) # substituting for facility based pharmacist staff (assumption); rest of the other cadres remain unchanged in terms of need. 
       pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
-    } else if (allow_task_shifting_pharm == 1){
+    } else if (allow_task_shifting == 1){
       # Estimate the total time spent for HF based cadres and time to be redistributed by CHW involvement
       total_time_spent <- nursingstaffmins + medstaffmins + pharmstaffmins + labstaffmins + dentalstaffmins + mentalstaffmins + nutristaffmins + diagstaffmins
       time_to_redistribute <- ifelse(total_time_spent - chwstaffmins > 0, total_time_spent - chwstaffmins, 0)
@@ -249,9 +353,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       pvtpharmstaff <- ifelse(is.nan(pvtpharmstaff), 0, pvtpharmstaff)
     } 
   } else {
-    stop('ERROR: ERROR: allow_other_modes_delivery and allow_task_shifting_pharm take values 0 or 1')
+    stop('ERROR: allow_chw_delivery, allow_pvtpharm_delivery and allow_task_shifting take values 0 or 1')
   }
-  
   
   # Clean total workforce size per cadre   
   hr_size.limit <- as.data.frame(hr_size)
@@ -308,27 +411,47 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   cons.feascov <<- diag(x = cases, n, n)
   
   if (allow_demand_constraint == 1) {
-    if (allow_other_modes_delivery == 1) {
+    if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+      cons.feascov.limit <<- rbind(
+        as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases)),
+        as.matrix(cases * use_feas_constraint_chw * maxcoveragechw)
+      )
+    } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+      cons.feascov.limit <<- rbind(
+        as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases)),
+        as.matrix(cases * use_feas_constraint_private * maxcoverageprivate)
+      )
+    } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
       cons.feascov.limit <<- rbind(
         as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases)),
         as.matrix(cases * use_feas_constraint_chw * maxcoveragechw),
         as.matrix(cases * use_feas_constraint_private * maxcoverageprivate)
-      )
-    } else if (allow_other_modes_delivery == 0) {
+      )  
+    } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
       cons.feascov.limit <<- as.matrix(pmin(maxcoverage * max_feasible_coverage_scale * cases, cases))
     }
   } else if (allow_demand_constraint == 0) {
-    if (allow_other_modes_delivery == 1) {
+    if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+      cons.feascov.limit <<- rbind(
+        as.matrix(cases),
+        as.matrix(cases * use_feas_constraint_chw * maxcoveragechw)
+      )
+    } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+      cons.feascov.limit <<- rbind(
+        as.matrix(cases),
+        as.matrix(cases * use_feas_constraint_private * maxcoverageprivate)
+      )
+    } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
       cons.feascov.limit <<- rbind(
         as.matrix(cases),
         as.matrix(cases * use_feas_constraint_chw * maxcoveragechw),
         as.matrix(cases * use_feas_constraint_private * maxcoverageprivate)
       )
-    } else if (allow_other_modes_delivery == 0) {
+    } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
       cons.feascov.limit <<- as.matrix(cases)
     }
   } else {
-    print('ERROR: allow_demand_constraint and allow_other_modes_delivery can take values 0 or 1')
+    print('ERROR: allow_demand_constraint and allow_chw_delivery and allow_pvtpharm_delivery can take values 0 or 1')
   }
   
   nonneg.lim <<- as.matrix(rep(0,n))
@@ -354,6 +477,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       } else {
         cons_compulsory.limit[i] <<- cases[a]
       }
+      #we could add this line to solve the issue of no feasible solutions in the model 
+      cons.feascov.limit[a] <<- max(cons_compulsory.limit[i], cons.feascov.limit[a])
     }
     
   } else if (nrow(df_compulsory) == 0) {
@@ -451,11 +576,11 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   #--------------------------------------------------------------------------------
   # Update the constraint matrices if other modes of delivery is allowed
   
-  if (allow_other_modes_delivery == 0){
-    if ( allow_task_shifting_pharm == 0){
+  if (allow_chw_delivery == 0 & allow_pvtpharm_delivery==0){
+    if ( allow_task_shifting == 0){
       print("No task shifting of pharmaceutical tasks or other modes of delivery")
       
-    } else if (allow_task_shifting_pharm == 1){
+    } else if (allow_task_shifting == 1){
       reps <- 4
       #1. Objective
       objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
@@ -479,8 +604,107 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
     }
     
-  } else if (allow_other_modes_delivery == 1){
-    if (allow_task_shifting_pharm == 0) {
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==0){
+    if (allow_task_shifting == 0) {
+      reps <- 2
+      #1. Objective
+      objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
+      #2. Drug budget constraint (cons_drug.limit does not need to be changed)
+      cons_drug <<- duplicate_matrix_vertically(reps, as.matrix(cons_drug))
+      #3. Feasible coverage constraint
+      cons.feascov <<- duplicate_matrix_vertically(reps,as.matrix(cons.feascov))
+      #4. Feasible coverage constraint for Community health workers 
+      cons.feascov.chw <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n))
+      #5. Non-negativity limit for feasible coverage constraint (facility based cadres)
+      cons.feascov.nonneg <<- rbind(diag(x = cases, n, n), diag(x = 0, n, n))
+      #6. Non-negativity limit for feasible coverage constraint (CHWs cadres)
+      cons.feascov.chw.nonneg <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n))
+      #8. Compulsory interventions
+      cons_compulsory <<- duplicate_matrix_vertically(reps,as.matrix(cons_compulsory))
+      #9. Nested complements
+      cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
+      #10. Substitutes
+      cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      
+    } else if (allow_task_shifting == 1){
+      reps <- 5
+      #1. Objectives
+      objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
+      #2. Drug budget constraint (cons_drug.limit does not need to be changed)
+      cons_drug <<- duplicate_matrix_vertically(reps, as.matrix(cons_drug))
+      #3. Feasible coverage constraint
+      cons.feascov <<- duplicate_matrix_vertically(reps,as.matrix(cons.feascov))
+      #4. Feasible coverage constraint for Community health workers 
+      cons.feascov.chw <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n))
+      #6. Non-negativity limit for feasible coverage constraint (facility based cadres)
+      cons.feascov.nonneg <<- rbind(diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #7. Non-negativity limit for feasible coverage constraint (CHWs cadres)
+      cons.feascov.chw.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n))
+      #9. Non-negativity limit for tasking from pharmacists to nurses 
+      cons.feascov.ts1.nonneg <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #10. Non-negativity limit for tasking from nutritionists to nurses  
+      cons.feascov.ts2.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #11.Non-negativity limit for tasking from pharmacists and nutritionists to nurses 
+      cons.feascov.ts3.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n))
+      #12. Compulsory interventions
+      cons_compulsory <<- duplicate_matrix_vertically(reps,as.matrix(cons_compulsory))
+      #13. Nested complements
+      cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
+      #14. Substitutes
+      cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+    } 
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery==1){
+    if (allow_task_shifting == 0) {
+      reps <- 2
+      #1. Objective
+      objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
+      #2. Drug budget constraint (cons_drug.limit does not need to be changed)
+      cons_drug <<- duplicate_matrix_vertically(reps, as.matrix(cons_drug))
+      #3. Feasible coverage constraint
+      cons.feascov <<- duplicate_matrix_vertically(reps,as.matrix(cons.feascov))
+      #5. Feasible coverage constraint for Private health workers 
+      cons.feascov.private <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n))
+      #6. Non-negativity limit for feasible coverage constraint (facility based cadres)
+      cons.feascov.nonneg <<- rbind(diag(x = cases, n, n), diag(x = 0, n, n))
+      #8. Non-negativity limit for feasible coverage constraint (Private cadres) 
+      cons.feascov.private.nonneg <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n))
+      #9. Compulsory interventions
+      cons_compulsory <<- duplicate_matrix_vertically(reps,as.matrix(cons_compulsory))
+      #10. Nested complements
+      cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
+      #11. Substitutes
+      cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      
+    } else if (allow_task_shifting == 1){
+      reps <- 5
+      #1. Objectives
+      objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
+      #2. Drug budget constraint (cons_drug.limit does not need to be changed)
+      cons_drug <<- duplicate_matrix_vertically(reps, as.matrix(cons_drug))
+      #3. Feasible coverage constraint
+      cons.feascov <<- duplicate_matrix_vertically(reps,as.matrix(cons.feascov))
+      #5. Feasible coverage constraint for Private health workers 
+      cons.feascov.private <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n))
+      #6. Non-negativity limit for feasible coverage constraint (facility based cadres)
+      cons.feascov.nonneg <<- rbind(diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #8. Non-negativity limit for feasible coverage constraint (Private cadres) 
+      cons.feascov.private.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n))
+      #9. Non-negativity limit for tasking from pharmacists to nurses 
+      cons.feascov.ts1.nonneg <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #10. Non-negativity limit for tasking from nutritionists to nurses  
+      cons.feascov.ts2.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
+      #11.Non-negativity limit for tasking from pharmacists and nutritionists to nurses 
+      cons.feascov.ts3.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n))
+      #12. Compulsory interventions
+      cons_compulsory <<- duplicate_matrix_vertically(reps,as.matrix(cons_compulsory))
+      #13. Nested complements
+      cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
+      #14. Substitutes
+      cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+    } 
+    
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==1){
+    if (allow_task_shifting == 0) {
       reps <- 3
       #1. Objective
       objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
@@ -505,7 +729,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       #11. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
       
-    } else if (allow_task_shifting_pharm == 1){
+    } else if (allow_task_shifting == 1){
       reps <- 6
       #1. Objectives
       objective <<- duplicate_matrix_vertically(reps, as.matrix(objective))
@@ -538,7 +762,21 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     } 
     
   } else {
-    stop('ERROR: allow other modes of delivery and task_shifting_pharm can take values 0 or 1')
+    stop('ERROR: other modes of delivery and task_shifting_pharm can take values 0 or 1')
+  }
+  
+  # additional functionality for marking up drugs and consumables cost when private pharmacist is allowed
+  
+  if (allow_pvtpharm_delivery == 1) {
+    if (allow_markup == 1) {
+      # Dynamically calculate the start and end indices for the private constraints
+      f <- nrow(cons_drug) / length(intcode)
+      private_indices <- ((f - 1) * length(intcode) + 1):(f * length(intcode))
+      
+      # Apply the 10% increase only where use_feas_constraint_private == 1
+      cons_drug[private_indices][use_feas_constraint_private == 1] <<- 
+        cons_drug[private_indices][use_feas_constraint_private == 1] * 1.05
+    }
   }
   
   # Combine all the above constraints into one matrix
@@ -551,31 +789,56 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
   
   # Generate cons.mat based on whether other modes of delivery or task shifting is allowed (LHS)
-  if (allow_other_modes_delivery == 1) {
-    if (allow_task_shifting_pharm == 1) {
+  
+  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+    } else if (allow_task_shifting == 0) {
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+    }
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+    } else if (allow_task_shifting == 0) {
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+    }
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
       cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
-    } else if (allow_task_shifting_pharm == 0) {
+    } else if (allow_task_shifting == 0) { 
       cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
     }
-  } else if (allow_other_modes_delivery == 0) {
-    if (allow_task_shifting_pharm == 1) {
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
       cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.nonneg), t(cons.feascov.ts1.nonneg), t(cons.feascov.ts2.nonneg), t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
-    } else if (allow_task_shifting_pharm == 0) {
+    } else if (allow_task_shifting == 0) {
       cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
     }
   }
   
   # Generate constraints matrix (limits) based on whether other modes of delivery or task shifting is allowed (RHS)
-  if (allow_other_modes_delivery == 1) {
-    if (allow_task_shifting_pharm == 1) {
+  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+    } else if (allow_task_shifting == 0) {
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+    }
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+    } else if (allow_task_shifting == 0) {
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+    }
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
       cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
-    } else if (allow_task_shifting_pharm == 0) {
+    } else if (allow_task_shifting == 0) {
       cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
     }
-  } else if (allow_other_modes_delivery == 0) {
-    if (allow_task_shifting_pharm == 1) {
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
       cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit)
-    } else if (allow_task_shifting_pharm == 0) {
+    } else if (allow_task_shifting == 0) {
       cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
     }
   }
@@ -590,25 +853,44 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   # Generates directions for drug budget, HR cadres, and cons.feas (cases)
   cons.dir <- rep("<=",1+hr_n+n)
   #Add additional feasibility constraints for CHWs and private
-  if (allow_other_modes_delivery == 1) {
-    cons.dir <- c(cons.dir,rep("<=",n), rep("<=", n))
-  } else {
+  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+    cons.dir <- c(cons.dir, rep("<=", n))
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+    cons.dir <- c(cons.dir, rep("<=", n))
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
+    cons.dir <- c(cons.dir, rep("<=", n), rep("<=", n))
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
     cons.dir <- cons.dir
+  } else {
+    print("ERROR: Invalid combination of delivery modes")
   }
   #Add non-negativity limit directions based on whether tasking shifting or other modes of delivery is allowed or not 
-  if (allow_other_modes_delivery == 1) {
-    if (allow_task_shifting_pharm == 1) {
-      cons.dir <- c(cons.dir,rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",comp.count))
-    } else if (allow_task_shifting_pharm == 0) {
-      cons.dir <- c(cons.dir,rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",comp.count))
+  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    } else if (allow_task_shifting == 0) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", comp.count))
     }
-  } else if (allow_other_modes_delivery == 0) {
-    if (allow_task_shifting_pharm == 1) {
-      cons.dir <- c(cons.dir,rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",n), rep(">=",comp.count))
-    } else if (allow_task_shifting_pharm == 0) {
-      cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count))
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    } else if (allow_task_shifting == 0) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    }
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
+    if (allow_task_shifting == 1) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    } else if (allow_task_shifting == 0) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    }
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
+    if (allow_task_shifting == 1) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", n), rep(">=", comp.count))
+    } else if (allow_task_shifting == 0) {
+      cons.dir <- c(cons.dir, rep(">=", n), rep(">=", comp.count))
     }
   }
+  
   #Add directions for substitutable interventions 
   cons.dir <- c(cons.dir,rep("<=",subs.count))
   #Add directions for complementary interventions 
@@ -736,9 +1018,16 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   # HR Resource Use
   data_hr <- sweep(solution_hruse, 2, cons_hr.limit_base, FUN = '/')
   
-  if (allow_other_modes_delivery==1){
+  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
     hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
-                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", "Community \nhealth \nworkers", "Private \nPharmacists")
+                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", "Community \nhealth \nworkers")
+  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
+    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
+                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", "Private \nPharmacists")
+  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
+    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
+                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", 
+                   "Community \nhealth \nworkers", "Private \nPharmacists")
   } else {
     hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
                    "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff")
