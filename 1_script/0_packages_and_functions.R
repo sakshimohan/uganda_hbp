@@ -969,7 +969,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   #solution_hruse.pvt <- solution.df_hruse[(length(intcode) + 1):(2 * length(intcode)), c("solution_medstaff", "solution_nurse", "solution_pharmacist", "solution_lab", "solution_dental", "solution_mental", "solution_nutrition", "solution_community", "solution_diagnostic")]
   
   total_hruse <<- colSums(solution_hruse, na.rm = FALSE, dims = 1) # Number of minutes per health worker cadre utlitised by the optimal solution
-  hruse.prop <<- round(total_hruse/cons_hr.limit_base, 2)
+  hruse.prop <<- round(total_hruse/cons_hr.limit_base, 4)
   colnames(hruse.prop) <<- hr_cadres
   
   #hruse.prop_hf <- round(colSums(solution_hruse.hf, na.rm = FALSE, dims = 1)/cons_hr.limit_base,2)
