@@ -43,7 +43,7 @@ no.cet <- 9999999999
 # Scenario 1: No constraints
 #----------------------------------------------------------------------------------------------------------------------------
 
-visible_cadres = c(1:3,5:10) # showing all cadres except the dental staff
+visible_cadres = c(1:4,6:10) # showing all cadres except the dental staff
 
 
 capture.output(
