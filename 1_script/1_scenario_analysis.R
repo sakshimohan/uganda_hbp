@@ -86,7 +86,7 @@ scen4_coverage = solution
 capture.output(
   find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                        drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 1, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
                        allow_task_shifting = 0)
 )
 scen5 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
