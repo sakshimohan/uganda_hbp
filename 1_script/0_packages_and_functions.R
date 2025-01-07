@@ -1010,7 +1010,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
 #############################################################
 # Note that in order to run this function, find_optimal_package needs to be run first
 gen_resourceuse_graphs <- function(plot_title, file_name){
-  pal <- viridisLite::viridis(10) # Create a viridis palette for the graph
+  pal <- viridisLite::viridis(12) # Create a viridis palette for the graph
   #pal <- rainbow(10)
   
   ## Generate matrix representing HR and Drug budget use by the HBP solution run above
