@@ -387,7 +387,7 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   cons_hr <- cbind(medstaff/(medstaffmins.limit/medstaff.limit), nursingstaff/(nursingstaffmins.limit/nursingstaff.limit), pharmstaff/(pharmstaffmins.limit/pharmstaff.limit), labstaff/(labstaffmins.limit/labstaff.limit), dentalstaff/(dentalstaffmins.limit/dentalstaff.limit), mentalstaff/(mentalstaffmins.limit/mentalstaff.limit), nutristaff/(nutristaffmins.limit/nutristaff.limit),diagstaff/(diagstaffmins.limit/diagstaff.limit), chwstaff/(chwstaffmins.limit/chwstaff.limit), pvtpharmstaff/(pvtpharmstaffmins.limit/pvtpharmstaff.limit))
   cons_hr.saved <<- cons_hr
   
-  cons_hr.limit_base <- cbind(medstaff.limit, nursingstaff.limit, pharmstaff.limit, labstaff.limit, dentalstaff.limit, mentalstaff.limit, nutristaff.limit, diagstaff.limit, chwstaff.limit, pvtpharmstaff.limit)
+  cons_hr.limit_base <<- cbind(medstaff.limit, nursingstaff.limit, pharmstaff.limit, labstaff.limit, dentalstaff.limit, mentalstaff.limit, nutristaff.limit, diagstaff.limit, chwstaff.limit, pvtpharmstaff.limit)
   cons_hr.limit <- cbind(medstaff.limit * medstaff.scale, nursingstaff.limit * nursestaff.scale, pharmstaff.limit * pharmstaff.scale, labstaff.limit * labstaff.scale, dentalstaff.limit * dentalstaff.scale, mentalstaff.limit * mentalstaff.scale, nutristaff.limit * nutristaff.scale, diagstaff.limit * diagstaff.scale, chwstaff.limit * chwstaff.scale, pvtpharmstaff.limit * pvtpharmstaff.scale)
   
   colnames(cons_hr.limit) <- colnames(cons_hr)
