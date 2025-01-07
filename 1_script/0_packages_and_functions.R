@@ -1018,20 +1018,10 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   # HR Resource Use
   data_hr <- sweep(solution_hruse, 2, cons_hr.limit_base, FUN = '/')
   
-  if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
-    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
-                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", "Community \nhealth \nworkers")
-  } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
-    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
-                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", "Private \nPharmacists")
-  } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
-    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
-                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", 
-                   "Community \nhealth \nworkers", "Private \nPharmacists")
-  } else {
-    hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
-                   "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff")
-  }
+  hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
+                 "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", 
+                 "Community \nhealth \nworkers", "Private \nPharmacists")
+  
   # Drug budget Use
   data_drug <- as.matrix(solution_drugexp)/cons_drug.limit_base
   
