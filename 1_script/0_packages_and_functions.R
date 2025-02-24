@@ -937,9 +937,30 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   dalys_averted.prop <<- sum(unlist(lapply(solution_dalysaverted, sum)))/sum(unlist(lapply(dalysavertible, sum)))
   
   # Drugs and Commodities cost (% of budget available)
-  solution_drugexp <<- solution*cons_drug[1:length(dalys),] # Total drug budget required per intervention for the  the optimal solution
-  total_drug_exp <<- round(sum(unlist(lapply(solution_drugexp, sum))),2) # Total drug budget required for the  the optimal solution
-  drug_exp.prop <<- total_drug_exp/cons_drug.limit_base
+  #solution_drugexp <<- solution*cons_drug[1:length(dalys),] # Total drug budget required per intervention for the  the optimal solution
+  #total_drug_exp <<- round(sum(unlist(lapply(solution_drugexp, sum))),2) # Total drug budget required for the  the optimal solution
+  #drug_exp.prop <<- total_drug_exp/cons_drug.limit_base
+  
+  if (allow_pvtpharm_delivery == 1) {
+    if (allow_markup == 1) {
+      # Case where both allow_pvtpharm_delivery and allow_markup are 1
+      solution_drugexp <<- solution.df$solution * cons_drug
+      total_drug_exp <<- round(sum(unlist(lapply(solution_drugexp, sum))), 2)
+      drug_exp.prop <<- total_drug_exp / cons_drug.limit_base
+      solution_drugexp <<- solution * cons_drug[1:length(dalys),]
+    } else {
+      # Case where allow_pvtpharm_delivery is 1, but allow_markup is not 1
+      solution_drugexp <<- solution * cons_drug[1:length(dalys),]  # Total drug budget required per intervention for the optimal solution
+      total_drug_exp <<- round(sum(unlist(lapply(solution_drugexp, sum))), 2)  # Total drug budget required for the optimal solution
+      drug_exp.prop <<- total_drug_exp / cons_drug.limit_base
+    }
+  } else {
+    # Case where allow_pvtpharm_delivery is not 1
+    solution_drugexp <<- solution * cons_drug[1:length(dalys),]  # Total drug budget required per intervention for the optimal solution
+    total_drug_exp <<- round(sum(unlist(lapply(solution_drugexp, sum))), 2)  # Total drug budget required for the optimal solution
+    drug_exp.prop <<- total_drug_exp / cons_drug.limit_base
+  }
+  
   
   # Total HR use (% of capacity)
   hr_cadres <- c("Medical staff", "Nurse", "Pharmacist", "Lab", "Dental", "Mental", "Nutrition", "Diagnostic", "Community", "Pvt Pharmacist" )
