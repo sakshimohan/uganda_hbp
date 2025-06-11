@@ -12,7 +12,7 @@
 ##########################################################
 # 1 - Set Working Directory & and Run LP function Script
 ##########################################################
-setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/uganda_hbp")
+setwd ("/Users/crw571/Desktop/uganda_hbp")
 #setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp") 
 
 # Run R script which generates LP function
@@ -31,7 +31,6 @@ base.cet <- 165 # This value is in 2023 USD
 base.drugbudget <- 560823263 #new Uganda drugs and consumables budget
 base.hr <- rep(1,10)
 no.hr.limit <- rep(9999999999,10) # set an arbitrarily high scaling figure to represent no constraint
-nurse.limit <- c(999999999, 1, 999999999, 999999999, 999999999, 999999999,999999999,999999999,999999999,999999999)
 no.drugbudget.limit <- 9999999999
 no.cet <- 9999999999
 
@@ -44,16 +43,13 @@ visible_cadres = c(1:4,6:10) # showing all cadres except the dental staff
 
 # Scenarios
 ##########################################################
-scenarios = c("baseline: facility-based delivery", "Inclusion of CHWs only", "Inclusion of private pharmacists only", "Inclusion of both CHWs and private pharmacists", 
-              "Allowing taskshifting (to baseline)", "Allowing taskshifting & inclusion of CHWs", "Allowing taskshifting & inclusion of private pharmacists", 
-              "Allowing taskshifting & inclusion of CHWs & private pharmacists", "Allowing mark up for inclusion of private pharmacists", 
-              "CHWs and allowing mark up for private pharmacists", "Takshifting with markup for private pharmacists", "Taskshifting with both modes and markup") # for file names
-scenario_labels = c("Baseline scenario", "CHW scenario", "Private pharmacy scenario", "CHW and Private pharmacists scenario", 
-                    "Taskshifting scenario", "Taskshifting with CHW scenario", "Taskshifting with Private pharmacists scenario", 
-                    "Takshifting with CHWs & private pharmacists scenario", "Inclusion of private pharmacists with mark up", "Inclusion of both CHWs and private pharmacists with mark up",
-                    "Taskshifting with Private pharmacists scenario with markup", "Takshifting with CHWs & private pharmacists scenario with markup" ) # for table headers
+scenarios = c("Baseline: facility-based delivery", "Inclusion of VHTs only", "Inclusion of medicine retailers only", "Inclusion of both VHTs and medicine retailers", 
+              "Allowing mark up for inclusion of medicine retailers", "VHTs and allowing mark up for medicine retailers")  # for file names
 
-#Baseline: facility-based delivery
+scenario_labels = c("Baseline scenario", "Standalone VHT Integration", "Standalone Medicine Retailers Integration", "Joint Integration", 
+                    "Standalone Medicine Retailers Integration with markup", "Joint Integration with markup") # for table headers
+
+#1.Baseline: facility-based delivery
 find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                      drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
                      hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
@@ -63,7 +59,7 @@ summary_base = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_a
 optimal_coverage_base = solution
 
 
-#Inclusion of CHWs only
+#2. Inclusion of VHTs only
 find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                      drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
                      hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
@@ -72,7 +68,7 @@ find_optimal_package(input_data_file = chosen_data_file, objective_input = 'neth
 summary_chw = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 optimal_coverage_chw = solution
 
-#Inclusion of private pharmacies only
+#3. Inclusion of medicine retailers only
 find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                      drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
                      hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
@@ -82,7 +78,7 @@ summary_pvtpharm = cbind.data.frame(pos_nethealth.count, intervention.count, dal
 optimal_coverage_pvtpharm = solution
 
 
-#Inclusion of both CHWs and private pharmacies
+#4. Inclusion of both VHTs and medicine retailers 
 find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
                      drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
                      hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
@@ -90,44 +86,6 @@ find_optimal_package(input_data_file = chosen_data_file, objective_input = 'neth
 
 summary_chw_and_pvtpharm = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
 optimal_coverage_chw_and_pvtpharm = solution
-
-#Allowing taskshifting (to baseline)
-find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                     allow_task_shifting = 1)
-
-summary_taskshifting = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-optimal_coverage_taskshifting = solution
-
-
-#Allowing task-shifting and inclusion of CHW
-find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                     allow_task_shifting = 1)
-
-summary_taskshifting_chw = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-optimal_coverage_taskshifting_chw = solution
-
-#Allowing task-shifting and inclusion of private pharmacists 
-find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                     allow_task_shifting = 1)
-
-summary_taskshifting_pvt_pharm = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-optimal_coverage_taskshifting_pvt_pharm = solution
-
-#Allowing taskshifting & inclusion of CHWs & private pharmacies
-find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                     allow_task_shifting = 1)
-
-summary_taskshifting_with_other_modes = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-optimal_coverage_taskshifting_with_othermodes = solution
-
 
 
 ###########################################################################################################################################################
@@ -1443,6 +1401,44 @@ ggsave("4_outputs/figures/ability_to_pay_plot_taskshifting.png", p, width = 9, h
 #-------------------------------------------------------------------------------------------------------------------------------------
 
 
+
+
+#Allowing taskshifting (to baseline)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
+                     allow_task_shifting = 1)
+
+summary_taskshifting = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting = solution
+
+
+#Allowing task-shifting and inclusion of CHW
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
+                     allow_task_shifting = 1)
+
+summary_taskshifting_chw = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_chw = solution
+
+#Allowing task-shifting and inclusion of private pharmacists 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
+                     allow_task_shifting = 1)
+
+summary_taskshifting_pvt_pharm = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_pvt_pharm = solution
+
+#Allowing taskshifting & inclusion of CHWs & private pharmacies
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
+                     allow_task_shifting = 1)
+
+summary_taskshifting_with_other_modes = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_with_othermodes = solution
 
 
 

@@ -13,6 +13,7 @@ library(xtable) # for LaTeX tables
 library(tidyr)
 library(scales) # to formal axis labels
 library(viridis) # load viridis colour palette
+library(paletteer) #load a different colour palette
 
 ###################################
 # 3. Define customizable LPP/optimization function
@@ -43,6 +44,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   df_substitutes <- read_excel(input_data_file, sheet = "substitute int",col_names = TRUE,col_types=NULL,na="",skip=0)
   # Load complementary intervention list
   df_complements <- read_excel(input_data_file, sheet = "complementary int",col_names = TRUE,col_types=NULL,na="",skip=0)
+  #Load cascade intervention data set 
+  df_cascade <- read_excel(input_data_file, sheet = "cascade int",col_names = TRUE,col_types=NULL,na="",skip=0)
   
   # Clean dataframes
   df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
@@ -522,8 +525,39 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
     cons_complements <<- t(cons_complements)
   }else{cons_complements <<- t(cons_complements)}
   
+  #6. Cascade interventions 
+  #------------------------------------------
+  #The complementary intervention must be given to all eligible cases 
+  cascade.count <- nrow(df_cascade)
+  cons_cascade.limit <<- matrix(0L, cascade.count, ncol = 1)
+  cons_cascade <<- matrix(0L, cascade.count, ncol = n) 
   
-  # 6. Substitute interventions
+  if (cascade.count > 0){
+    print("care cascadre intervention: Constraints added")
+    counter = 1
+    for (i in 1:cascade.count){
+      print(paste("cascade group", i))
+      print("------------------------------------------------------------")  
+      # Retrieve base intervention codes from the data frame 
+      prerequisite <- which(df$intcode == df_cascade$`Prerequisite intervention`[i])
+      prerequisite_intervention <- df$intervention[prerequisite]
+      cases_prerequisite <- cases[prerequisite]
+      # Retrieve nested intervention codes from the data frame
+      linked_intervention_location <- which(df$intcode == df_cascade$`Linked intervention`[i])
+      linked_intervention <- df$intervention[linked_intervention_location]
+      #Print information 
+      print(paste("Prerequisite intervention:", prerequisite_intervention , cases_prerequisite, "Intervention: ", linked_intervention, "; Code: ", df_cascade$`Linked intervention`[i] , "; (Ratio: ",as.numeric(df_cascade$Ratio[i]), ")"))
+      #Apply the proportion for the base intervention and set complement constraint 
+      cons_cascade[counter,prerequisite] <<- cases_prerequisite * as.numeric(df_cascade$Ratio[i])
+      cons_cascade[counter,linked_intervention_location] <<- - cases[linked_intervention_location]
+      
+      counter = counter + 1
+    } 
+    cons_cascade <<- t(cons_cascade)
+  }else{cons_cascade <<- t(cons_cascade)}
+  
+  
+  # 7. Substitute interventions
   #--------------------------------------
   subs.count <- length(unique(df_substitutes$Group)) 
   cons_substitutes.limit <<- matrix(0L, subs.count, ncol = 1)
@@ -594,14 +628,16 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons.feascov.ts1.nonneg <<- rbind(diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n), diag(x = 0, n, n))
       #6. Non-negativity limit for tasking from nutritionists to nurses 
       cons.feascov.ts2.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n), diag(x = 0, n, n))
-      #6. Non-negativity limit for tasking from pharmacists and nutritionists to nurses
+      #7. Non-negativity limit for tasking from pharmacists and nutritionists to nurses
       cons.feascov.ts3.nonneg <<- rbind(diag(x = 0, n, n), diag(x = 0, n, n), diag(x = 0, n, n), diag(x = cases, n, n))
-      #4. Compulsory interventions
+      #8. Compulsory interventions
       cons_compulsory <<- duplicate_matrix_vertically(reps,as.matrix(cons_compulsory))
-      #6. Nested complements
+      #9. Nested complements
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
-      #6. Substitutes
+      #10. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
     }
     
   } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==0){
@@ -625,6 +661,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #10. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
       
     } else if (allow_task_shifting == 1){
       reps <- 5
@@ -652,6 +690,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #14. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
     } 
   } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery==1){
     if (allow_task_shifting == 0) {
@@ -674,6 +714,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #11. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
       
     } else if (allow_task_shifting == 1){
       reps <- 5
@@ -701,6 +743,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #14. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
     } 
     
   } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery==1){
@@ -728,6 +772,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #11. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
       
     } else if (allow_task_shifting == 1){
       reps <- 6
@@ -759,6 +805,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
       cons_complements <<- duplicate_matrix_vertically(reps,as.matrix(cons_complements))
       #14. Substitutes
       cons_substitutes <<- duplicate_matrix_vertically(reps,as.matrix(cons_substitutes))
+      #11. cascade
+      cons_cascade <<- duplicate_matrix_vertically(reps,as.matrix(cons_cascade))
     } 
     
   } else {
@@ -787,59 +835,61 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   print(paste("Dimension - Compulsory interventions constraint:", paste( unlist(dim(t(cons_compulsory))), collapse=' ')))
   print(paste("Dimension - Substitutes constraint:", paste( unlist(dim(t(cons_substitutes))), collapse=' ')))
   print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
+  print(paste("Dimension - Cascade constraint:", paste( unlist(dim(t(cons_cascade))), collapse=' ')))
   
   # Generate cons.mat based on whether other modes of delivery or task shifting is allowed (LHS)
   
   if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
     if (allow_task_shifting == 1) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     } else if (allow_task_shifting == 0) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.chw.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     }
   } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
     if (allow_task_shifting == 1) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     } else if (allow_task_shifting == 0) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.private),  t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     }
   } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
     if (allow_task_shifting == 1) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg),  t(cons.feascov.ts1.nonneg),  t(cons.feascov.ts2.nonneg),  t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     } else if (allow_task_shifting == 0) { 
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.chw), t(cons.feascov.private), t(cons.feascov.chw.nonneg), t(cons.feascov.private.nonneg), t(cons.feascov.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     }
   } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
     if (allow_task_shifting == 1) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.nonneg), t(cons.feascov.ts1.nonneg), t(cons.feascov.ts2.nonneg), t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov.nonneg), t(cons.feascov.ts1.nonneg), t(cons.feascov.ts2.nonneg), t(cons.feascov.ts3.nonneg), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     } else if (allow_task_shifting == 0) {
-      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+      cons.mat <<- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements), t(cons_cascade)) # LHS
     }
   }
+  
   
   # Generate constraints matrix (limits) based on whether other modes of delivery or task shifting is allowed (RHS)
   if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 0) {
     if (allow_task_shifting == 1) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     } else if (allow_task_shifting == 0) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     }
   } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 1) {
     if (allow_task_shifting == 1) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     } else if (allow_task_shifting == 0) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     }
   } else if (allow_chw_delivery == 1 & allow_pvtpharm_delivery == 1) {
     if (allow_task_shifting == 1) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     } else if (allow_task_shifting == 0) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     }
   } else if (allow_chw_delivery == 0 & allow_pvtpharm_delivery == 0) {
     if (allow_task_shifting == 1) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit)
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, nonneg.lim, nonneg.lim, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit)
     } else if (allow_task_shifting == 0) {
-      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
+      cons.mat.limit <<- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit, cons_cascade.limit) # RHS
     }
   }
   
@@ -895,6 +945,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
   cons.dir <- c(cons.dir,rep("<=",subs.count))
   #Add directions for complementary interventions 
   cons.dir <- c(cons.dir, rep(">=", complements.count))
+  #Add directions for cascade interventions 
+  cons.dir <- c(cons.dir, rep("=", cascade.count))
   length(cons.dir)
   length(cons.dir) = dim(cons.mat.limit)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
@@ -1031,7 +1083,8 @@ find_optimal_package <- function(input_data_file, # path to excel sheet which co
 #############################################################
 # Note that in order to run this function, find_optimal_package needs to be run first
 gen_resourceuse_graphs <- function(plot_title, file_name){
-  pal <- viridisLite::viridis(12) # Create a viridis palette for the graph
+  pal <- as.character(paletteer_d("ggsci::default_igv", n = 13)) 
+  #pal <- viridisLite::viridis(12) # Create a viridis palette for the graph
   #pal <- rainbow(10)
   
   ## Generate matrix representing HR and Drug budget use by the HBP solution run above
@@ -1041,7 +1094,7 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   
   hr_cadres <- c("Doctor/\nClinical officer", "Nursing \nstaff", "Pharmaceutical \nstaff", "Laboratory \nstaff", 
                  "Dental \nstaff", "Mental Health \nstaff", "Nutrition \nstaff", "Diagnostic \nstaff", 
-                 "Community \nhealth \nworkers", "Private \nPharmacists")
+                 "Village \nHealth \nTeam", "Medicine \nRetailers")
   
   # Drug budget Use
   data_drug <- as.matrix(solution_drugexp)/cons_drug.limit_base
