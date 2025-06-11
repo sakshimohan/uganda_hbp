@@ -1166,34 +1166,66 @@ program_summary_pt10[,4] <- program_summary_pt8[,3]/sum(program_summary_pt10[,2]
 colnames(program_summary_pt10)[4] <- "solution_pt10"
 program_summary_pt10 <- program_summary_pt10 %>% rename(total.dalys.avertible = `cases * dalys`)
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+#Merging all the program summaries of all scenarios. 
+program_summary <- merge(program_summary_pt7, program_summary_pt8, by = c("category", "total.dalys.avertible"))
+program_summary <- merge(program_summary, program_summary_pt9, by = c("category", "total.dalys.avertible"))
+program_summary <- merge(program_summary, program_summary_pt10, by = c("category", "total.dalys.avertible"))
+
+colnames(program_summary) = c("Program", "Total DALYs averted overall",
+                              "Total DALYs averted in the optimal package (Task-shifting)", "Percentage of total DALYs averted in the optimal package (Task-shifting)",
+                              "Total DALYs averted in the optimal package (Task-shifting & VHTs)", "Percentage of total DALYs averted in the optimal package (Task-shifting & VHTs)",
+                              "Total DALYs averted in the optimal package (Task-shifting & Medicine retailers)", "Percentage of total DALYs averted in the optimal package (Task-shifting & Medicine retailers)",
+                              "Total DALYs averted in the optimal package (Taskshifting and other modes)", "Percentage of total DALYs averted in the optimal package (Taskshifting and other modes")
+
+write.csv(program_summary, file = "4_outputs/tables/table_3_taskshifting_program_summary.csv")
+
+#Rename the columns
+colnames(program_summary_pt7)[4] <- "solution.prop"
+colnames(program_summary_pt8)[4] <- "solution.prop"
+colnames(program_summary_pt9)[4] <- "solution.prop"
+colnames(program_summary_pt10)[4] <- "solution.prop"
+#Rename the scenarios
+program_summary_pt7$scenario <- rep("Task \nshifting", nrow(program_summary_pt7))
+program_summary_pt8$scenario <- rep("Takshifting \nwith \nStandalone VHT Integration", nrow(program_summary_pt8))
+program_summary_pt9$scenario <- rep("Takshifting \nwith \nStandalone Medicine Retailer \nIntegration", nrow(program_summary_pt9))
+program_summary_pt10$scenario <- rep("Taskhifting \nwith \nJoint Integration", nrow(program_summary_pt10))
+
+#Create a stacked bar chart - with taskshifting allowed 
+tmap_tab <- rbind(program_summary_pt7, program_summary_pt8, program_summary_pt9, program_summary_pt10)
+data_melted <- reshape2::melt(tmap_tab, id.vars = c("category", "scenario"), measure.vars = "solution.prop")
+#Create a palette with 13 distinct colors
+library(paletteer)
+pal <- as.character(paletteer_d("ggsci::default_igv", n = 13)) 
+# Create a label column that only includes labels for segments > 2%
+library(ggplot2)
+data_melted$label <- ifelse(data_melted$value > 0.02, paste0(round(data_melted$value * 100, 0), "%"), "")
+
+prog_sum_plot_w_taskshift <- ggplot(data_melted, aes(factor(scenario, 
+                                                            levels = c("Task \nshifting", "Takshifting \nwith \nStandalone VHT Integration", "Takshifting \nwith \nMedicine Retailer Integration" , "Takshifting \nwith \nJoint Integration",
+                                                                       setdiff(unique(scenario), c("Task \nshifting", "Takshifting \nwith \nStandalone VHT Integration", "Taskshifting \nwith \nMedicine Retailer \nIntegration" , "Takshifting \nwith \nJoint Integration")))), 
+                                                     y = value, fill = category)) +
+  geom_bar(stat = "identity", position = "stack") +  # Stack the bars
+  geom_text(aes(label = label), 
+            position = position_stack(vjust = 0.5),  # Position text in the middle of each segment
+            color = "black", size = 4) +  # Add percentage text
+  scale_fill_manual(values =  pal, name = "Disease Program Area") +  # Set legend title
+  ggtitle("Scenario wise: Percentage of Total DALYs averted by disease program areas") +  # Add plot title
+  theme_minimal() +  # Use minimal theme
+  labs(x = "Scenario", y = "Program proportion") +  # Set x and y axis labels
+  theme(axis.text.y = element_blank(),
+        legend.position = "bottom")  # Remove y-axis labels
+# Check plot
+prog_sum_plot_w_taskshift
+# Open a PNG device with a fixed file name
+png("4_outputs/figures/prog_sum_w_taskshift.png", width = 600, height = 600)
+print(prog_sum_plot_w_taskshift)
+# Close the device to save the file
+dev.off()
+
+# Figure 2: Marginal value (with taskshifting)
+##########################################################
+
+
 
 ##########################################################
 # 2 - Set up common inputs for scenarios
