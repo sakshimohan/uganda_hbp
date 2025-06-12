@@ -15,6 +15,11 @@ library(scales) # to formal axis labels
 library(viridis) # load viridis colour palette
 library(paletteer) #load a different colour palette
 
+##########################################################
+# 1 - Set Working Directory & and Run LP function Script
+##########################################################
+setwd ("/Users/crw571/Desktop/uganda_hbp")
+
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
