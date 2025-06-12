@@ -13,7 +13,7 @@
 # 1 - Set Working Directory & and Run LP function Script
 ##########################################################
 # Point to where the repo is stored on your machine
-setwd ("C:/Users/crw571/OneDrive - University of York/Desktop/uganda_hbp")
+setwd ("/Users/crw571/Desktop/uganda_hbp")
 #setwd("/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp") 
 
 # Run R script which generates LP function
@@ -27,12 +27,10 @@ source("1_script/0_packages_and_functions.R")
 #  Common function inputs
 #------------------------
 chosen_data_file <- "2_data/chbp_2023_full_dataset.xls"
-chosen_df <- df
 base.cet <- 165 # This value is in 2023 USD 
 base.drugbudget <- 560823263 #new Uganda drugs and consumables budget
 base.hr <- rep(1,10)
 no.hr.limit <- rep(9999999999,10) # set an arbitrarily high scaling figure to represent no constraint
-nurse.limit <- c(999999999, 1, 999999999, 999999999, 999999999, 999999999,999999999,999999999,999999999,999999999)
 no.drugbudget.limit <- 9999999999
 no.cet <- 9999999999
 
@@ -45,187 +43,232 @@ no.cet <- 9999999999
 
 visible_cadres = c(1:4,6:10) # showing all cadres except the dental staff
 
+scenarios = c("Baseline: facility-based delivery", "Inclusion of VHTs only", "Inclusion of medicine retailers only", "Inclusion of both VHTs and medicine retailers", 
+              "Allowing mark up for inclusion of medicine retailers", "VHTs and allowing mark up for medicine retailers", "Allowing taskshifting (to baseline)", 
+              "Allowing taskshifting & inclusion of VHTs", "Allowing taskshifting & inclusion of medicine retailers", 
+              "Allowing taskshifting & inclusion of VHTs & medicine retailers", "Takshifting with markup for medicine retailers", 
+              "Taskshifting with VHTs and medicine retailers and markup", "Baseline: facility-based delivery unconstrained", "Inclusion of VHTs only unconstrained", 
+              "Inclusion of medicine retailers only unconstrained", "Inclusion of both VHTs and medicine retailers unconstrained", 
+              "Allowing mark up for inclusion of medicine retailers unconstrained", "VHTs and allowing mark up for medicine retailers unconstrained")  # for file names
 
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = no.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = no.drugbudget.limit, 
-                       hr_scale = no.hr.limit, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)  
-)
-drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
-scen1 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop,  cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen1_coverage = solution
+scenario_labels = c("Baseline scenario", "Standalone VHT Integration", "Standalone Medicine Retailers Integration", "Joint Integration", 
+                    "Standalone Medicine Retailers Integration with markup", "Joint Integration with markup", "Taskshifting", "Taskshifting and Standalone VHT Integration", 
+                    "Taskshifting and Standalone Medicine Retailers Integration", 
+                    "Taskshifting and Joint Integration", "Taskshifting and Standalone Medicine Retailers Integration with Markup", 
+                    "Taskshifting and Joint Integration with Markup", "Standalone VHT Integration unconstrained", "Standalone Medicine Retailers Integration unconstrained", "Joint Integration unconstrained", 
+                    "Standalone Medicine Retailers Integration with markup unconstrained", "Joint Integration with markup unconstrained") # for table headers
+
+#1.Baseline: facility-based delivery
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_base = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_base = solution
 
 
-# Scenario 2: CET = $165
+#2. Inclusion of VHTs only
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_vht = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_vht = solution
+
+#3. Inclusion of medicine retailers only
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_mr = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr = solution
+
+
+#4. Inclusion of both VHTs and medicine retailers 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_vht_and_mr = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_chw_and_pvtpharm = solution
+
+#5. #Allowing mark up with inclusion of medicine retailers 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_mr_markup = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_markup = solution
+
+#6. Allowing mark up with inclusion of VHTs and medicine retailers 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
+
+summary_mr_vht_markup = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_vht_markup = solution
+
+#7. Sensitivity analysis: Allowing facility based taskshifting to the baseline scenario 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)
+
+summary_taskshifting = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting = solution
+
+#8. Sensitivity analysis: Allowing facility based taskshifting with inclusion of VHTs  
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)  
+
+summary_taskshifting_vht = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_vht = solution 
+
+#9. Sensitivity analysis: Allowing facility based taskshifting with inclusion of medicine retailers 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)  
+
+summary_taskshifting_mr = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_mr = solution
+
+#10. Sensitivity analysis: Allowing facility based taskshifting with inclusion of VHTs and medicine retailers 
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)  
+
+summary_taskshifting_with_both = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_taskshifting_with_both = solution
+
+#11. Allowing mark up and facility based taskshifting with inclusion of medicine retailers  
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)  
+
+summary_mr_taskshift_markup = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_taskshift_markup = solution
+
+#12. Allowing mark up and facility based taskshifting with inclusion of VHTs and medicine retailers  
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 1)  
+
+summary_mr_vht_taskshift_markup = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_vht_taskshift_markup = solution
+
+#  Common function inputs
+#------------------------
+chosen_data_file <- "2_data/chbp_2023_full_dataset_SA.xls"
+chosen_df <- df
+base.cet <- 165 # This value is in 2023 USD 
+base.drugbudget <- 560823263 #new Uganda drugs and consumables budget
+base.hr <- rep(1,10)
+no.hr.limit <- rep(9999999999,10) # set an arbitrarily high scaling figure to represent no constraint
+no.drugbudget.limit <- 9999999999
+no.cet <- 9999999999
+
+########################################################################################################
+# 3 - Run optimisation under a variety of constraint scenarios
+#-------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = no.drugbudget.limit, 
-                       hr_scale = no.hr.limit, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)
-)
-drug_exp.prop = drug_exp.prop * no.drugbudget.limit/base.drugbudget
-scen3 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen3_coverage = solution
 
-# Scenario 3: CET = $165 + Drug budget constraint
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = no.hr.limit, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)
-)
-scen4 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen4_coverage = solution
+visible_cadres = c(1:4,6:10) # showing all cadres except the dental staff
 
+#2. Inclusion of VHTs only (no constraints)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
 
-# Scenario 4: CET = $165 + Drug budget constraint + HR capacity constraint 
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)
-)
-scen5 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen5_coverage = solution
+summary_vht_sa = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_vht_sa = solution
 
+#3. Inclusion of medicine retailers only (no constraints)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
 
-# Scenario 5: CET = $165 + Drug budget constraint + CHW delivery + HR capacity constraint 
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)
-)
-scen6 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen6_coverage = solution
+summary_mr_sa = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_sa = solution
 
+#4. Inclusion of both VHTs and medicine retailers (no constraints)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
 
-#Scenario 6: CET = $165 + Drug budget constraint + Private Pharmacist + HR capacity constraint  
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
-                       allow_task_shifting = 0)
-)
-scen7 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen7_coverage = solution
+summary_vht_and_mr_sa = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_vht_and_mr_sa = solution
 
+#5. #Allowing mark up with inclusion of medicine retailers (no constraints)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
 
-# Scenario 7: CET = $165 + Drug budget constraint + CHW delivery + Private pharmacist + HR capacity constraint 
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 0)
-)
-scen7 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen7_coverage = solution
+summary_mr_markup_sa = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_markup_sa = solution
 
-# Scenario 8: CET = $165 + Drug budget constraint + HR capacity constraint (WITH TASKSHIFTING)
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 0, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 1)
-)
-scen8 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen8_coverage = solution
+#6. Allowing mark up with inclusion of VHTs and medicine retailers (no constraints)
+find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
+                     drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
+                     hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1,
+                     allow_task_shifting = 0)
 
+summary_mr_vht_markup_sa = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted, dalys_averted.prop, solution.class$objval, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
+optimal_coverage_mr_vht_markup_sa = solution
 
-# Scenario 9: CET = $165 + Drug budget constraint + CHW delivery + Private pharmacist + HR capacity constraint (WITH TASKSHIFTING)
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 0, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 1)
-)
-scen9 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen9_coverage = solution
+----------------------------------------------------------------------------
 
-# Scenario 10: CET = $165 + Drug budget constraint + Private pharmacist + Mark up drug cost + HR capacity constraint 
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 0, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 0)
-)
-scen10 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen10_coverage = solution
-
-# Scenario 11: CET = $165 + Drug budget constraint + CHW Delivery + Private pharmacist + Mark up drug cost + HR capacity constraint 
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 0)
-)
-scen11 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen11_coverage = solution
-
-# Scenario 12: CET = $165 + Drug budget constraint + CHW Delivery + Private pharmacist + Mark up drug cost + HR capacity constraint (with TASKSHIFTING)
-#----------------------------------------------------------------------------------------------------------------------------
-capture.output(
-  find_optimal_package(input_data_file = chosen_data_file, objective_input = 'nethealth', cet_input = base.cet, 
-                       drug_budget_input = base.drugbudget, drug_budget_scale = 1, 
-                       hr_scale = base.hr, allow_chw_delivery = 1, allow_pvtpharm_delivery = 1, allow_markup = 1, allow_demand_constraint = 0, max_feasible_coverage_scale = 1,  compulsory_intervention_coverage_scale= 1, 
-                       allow_task_shifting = 1)
-)
-scen12 = cbind.data.frame(pos_nethealth.count, intervention.count, dalys_averted,  dalys_averted.prop, cet_soln, drug_exp.prop, t(hruse.prop[,visible_cadres]))
-scen12_coverage = solution
-
-
-# Extract scenario results to .csv
-#----------------------------------------------------------------------------------------------------------------------------
-scenarios = c("No constraints",
-              "CET ($165)",
-              "CET ($165) + Drug Budget",
-              "CET ($165) + Drug budget + HR capacity",
-              "CET ($165) + Drug budget + CHW delivery + HR capacity",
-              "CET ($165) + Drug budget + private pharmacist + HR capacity",
-              "CET ($165) + Drug budget + CHW delivery + private pharmacist + HR capacity",
-              "CET ($165) + Drug budget + HR capacity + taskshifting",
-              "CET ($165) + Drug budget + CHW delivery + private pharmacist + HR capacity + taskshifting",
-              "CET ($165) + Drug budget + private pharmacist + mark up drug cost + HR capacity",
-              "CET ($165) + Drug budget + CHW delivery + private pharmacist + mark up drug cost + HR capacity",
-              "CET ($165) + Drug budget + CHW delivery + private pharmacist + mark up drug cost + HR capacity + taskshifting"
-)
-
-# Ovrall summary results
-summary = rbind(scen1, scen2, scen3, scen4, scen5, scen6, scen7, scen8, scen9, scen10, scen11, scen12)
-summary = cbind(scenarios, summary)
-colnames(summary) = c("Constraints applied", 
-                      "Number of interventions with positive NHB", 
+summary = rbind(summary_base, summary_vht, summary_mr, summary_vht_and_mr, 
+                summary_mr_markup, summary_mr_vht_markup, summary_taskshifting, summary_taskshifting_vht, summary_taskshifting_mr, 
+                summary_taskshifting_with_both, summary_mr_taskshift_markup, summary_mr_vht_taskshift_markup, 
+                summary_vht_sa, summary_mr_sa, summary_vht_and_mr_sa, 
+                summary_mr_markup_sa, summary_mr_vht_markup_sa)
+summary = cbind(scenario_labels, summary)
+colnames(summary) = c("Scenario", 
+                      "Number of interventions with a positive Net Health Benefit", 
                       "Number of interventions in the optimal package", 
-                      "Total DALYs averted", 
-                      "Proportion of DALYs averted",
-                      "Highest ICER in the HBP", 
-                      "% of drug budget required",
-                      "% of Doctor/Clinical officer capacity required", "% of Nursing staff capacity required",
-                      "% of Pharmaceutical staff capacity required", 
-                      "% of Lab staff capacity required",
-                      "% of Mental health staff capacity required", 
-                      "% of Nutrition staff capacity required",
-                      "% of Diagnostic staff capacity required",
-                      "% of Community health workers capacity required",
-                      "% of Private pharmacist capacity required")
+                      "Total DALYs averted",
+                      "Percentage of the total DALYs averted",
+                      "Net DALYs averted", 
+                      "Highest ICER in the optimal package", 
+                      "Percentage of drug budget required",
+                      "Percentage of Doctor/Clinical officer capacity required", 
+                      "Percentage of Nursing staff capacity required",
+                      "Percentage of Pharmaceutical staff capacity required", 
+                      "Percentage of Laboratory staff capacity required",
+                      "Percentage of Mental health staff capacity required",
+                      "Percentage of Nutrition staff capacity required", 
+                      "Percentage of Radiography staff capacity required",
+                      "Percentage of Village health team capacity required",
+                      "Percentage of Medicine retailers capacity required")
 
-#print(xtable(summary, type = "latex"), file = "4_outputs/tables/scanario_summaries.tex")
-#write.csv(t(summary), file = "4_outputs/tables/all_scenarios_results.csv")
+summary$`Percentage of the total DALYs averted` <- sprintf("%.2f%%", (summary$`Percentage of the total DALYs averted`) * 100)
+summary$`Percentage of drug budget required` <- sprintf("%.2f%%", (summary$`Percentage of drug budget required`) * 100)
+summary$`Percentage of Doctor/Clinical officer capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Doctor/Clinical officer capacity required`) * 100)
+summary$`Percentage of Nursing staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Nursing staff capacity required`) * 100)
+summary$`Percentage of Pharmaceutical staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Pharmaceutical staff capacity required`) * 100)
+summary$`Percentage of Laboratory staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Laboratory staff capacity required`) * 100)
+summary$`Percentage of Mental health staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Mental health staff capacity required`) * 100)
+summary$`Percentage of Nutrition staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Nutrition staff capacity required`) * 100)
+summary$`Percentage of Radiography staff capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Radiography staff capacity required`) * 100)
+summary$`Percentage of Villa health team capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Village health team capacity required`) * 100)
+summary$`Percentage of Medicine retailers capacity required` <- sprintf("%.2f%%", (summary$`Percentage of Medicine retailers capacity required`) * 100)
 
-# Results on chosen package/coverage under various scenarios
-coverage_byscenario = cbind(category, intcode, intervention, scen1_coverage, scen2_coverage, scen3_coverage, scen4_coverage, scen5_coverage, scen6_coverage, scen7_coverage, scen8_coverage, scen9_coverage, scen10_coverage, scen11_coverage, scen12_coverage)
-colnames(coverage_byscenario) = c("Program", "Intervention code", "Intervention", scenarios)
-#write.csv(coverage_byscenario, file = "4_outputs/tables/all_scenarios_coverage_results.csv")
+write.csv(summary, file = "4_outputs/tables/all_scenarios_coverage_results.csv")
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
