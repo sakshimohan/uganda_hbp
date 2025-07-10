@@ -1,16 +1,23 @@
 #############################################################
-## Linear Programming Function to optimize Uganda's Health Benefits Package
+## Linear Programming Function to optimize Eswatini's Health Benefits Package
 
-## Created by: Sakshi Mohan; 13/12/20
+## Created by: Sakshi Mohan; 13/12/20. Revised by Finn McGuire; 16/06/25
 
 ## This file creates the linear constrained optimisation function to be used in
 # scenario generation
 #############################################################
 
+# Remove all objects in the global environment
+rm(list = ls())
+# To clear the console
+cat("\014")
+
 ##############################
 # 0 - Load librairies
 ##############################
 # Note the following packages need to be installed  readxl, lpSolveAPI, checkData, fmsb
+# install.packages(c("lpSolve", "readxl", "lpSolveAPI", "checkData", "fmsb"))
+
 library(readxl)
 library(lpSolve)
 library(tidyverse)
@@ -27,30 +34,30 @@ library(viridis) # load viridis colour palette
 ##############################
 # 1 - Set Working Directory
 ##############################
-setwd("C:/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/")
+setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
 
 ###################################
 # 2 - Load and set up data for LPP
 ###################################
 # Load epi/cost/CE dataset 
 #****************************************************
-df <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+df <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
 # Load HR availability dataset
 #****************************************************
-df_hr <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+df_hr <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
 
 # Set up dataframes
 #****************************************************
-colnames(df) = df[2,] # remove first two rows
-df <- df[-c(1:2),]  # remove first two columns
-df <- df[,c(1:32)]	# remove columns after 32
-df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
+colnames(df) = df[2,] # make row 2 the column names
+df <- df[-c(1:2),]  # remove first two rows
+df <- df[,c(1:32, 36:38)]	# remove columns except 1-32 & 36-38
+df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Eswatini)`)]
 
 colnames(df_hr) = df_hr[1,] # remove first row
 
 # Extract .csv versions of input data
-write.csv(df, file = "3_processing/uganda_intervention_data.csv")
-write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
+write.csv(df, file = "3_processing/eswatini_intervention_data.csv")
+write.csv(df_hr, file = "3_processing/eswatini_hr_data.csv")
 
 # Set up HR constraint dataframes
 #****************************************************
@@ -60,27 +67,60 @@ hr_size <- as.numeric(df_hr$'Total staff'[2:9]) # size of health workforce
 # Generate relevant lists from dataset
 #****************************************************
 # Rename columns
-names(df)[names(df) == 'DALYs averted per patient (Uganda)'] <- 'dalys'
-names(df)[names(df) == 'Average drugs and commodities cost (2019 USD)'] <- 'drugcost'
+names(df)[names(df) == 'DALYs averted per patient (Eswatini)'] <- 'dalys'
+names(df)[names(df) == 'Average drugs and commodities cost (2023 USD)'] <- 'drugcost'
 names(df)[names(df) == 'Coverage_2024'] <- 'maxcoverage' # Maximum feasible coverage in 2024 as per OneHealth Tool
-names(df)[names(df) == 'Cost per case (Uganda) - 2019 USD'] <- 'fullcost'
+names(df)[names(df) == 'Cost per case (Eswatini) - 2023 USD'] <- 'fullcost'
 names(df)[names(df) == 'Intervention'] <- 'intervention'
-names(df)[names(df) == 'Cases_full_2020'] <- 'cases'
+names(df)[names(df) == 'Cases_full_2024'] <- 'cases'
+names(df)[names(df) == 'Increm_cases_2024'] <- 'incremcases' 
 names(df)[names(df) == 'Code'] <- 'intcode'
 names(df)[names(df) == 'Category'] <- 'category'
+names(df)[names(df) == 'CHE cases averted per patient (25% threshold)'] <- 'che25'
+names(df)[names(df) == 'CHE cases averted per patient (10% threshold)'] <- 'che10'
 
 N <- length(df$dalys) # total number of interventions included in the analysis
 
 # Convert columns to numeric
-df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases'), as.numeric)
+df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10', 'che25'), as.numeric)
 str(df) # ^^ check format of all columns ^^	
+
+# Renaming variables 
+names(df)[names(df) == 'che10'] <- 'che10pp' # rename che10
+names(df)[names(df) == 'che25'] <- 'che25pp' # rename che25 
+
+df$che10 <- df$che10pp * df$cases   
+df$che25 <- df$che25pp * df$cases   
+
+df$cet <- 2612
+df$incl_increm_dalys_avert <- df$dalys * df$incremcases # this is same as dalysobj
+df$nhb <- (df$dalys*df$incremcases) - (df$fullcost * df$cases) / df$cet # this is same as nethealth
+
+## Creating single (combined) objective to optimise based on policy-chosen trade-off parameter k
+
+## weights that appear in the denominator
+w <- c(0.01, 0.1, 0.2, 0.5, 0.8, 0.85, 0.9, 0.95,
+       1,  2, 3, 4, 5, 6, 7, 8, 9, 10,
+       100, 200, 250, 300)
+
+## Creating single social benefit objective using CHE10 
+for (k in w) {
+  col_name <- paste0("sbche10_", k)
+  df[[col_name]] <- df$incl_increm_dalys_avert + df$che10 / k
+}
+
+## Creating single social benefit objective using CHE25 
+for (k in w) {
+  col_name <- paste0("sbche25_", k)
+  df[[col_name]] <- df$incl_increm_dalys_avert + df$che25 / k
+}
 
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
 find_optimal_package <- function(data.frame, # data on interventions 
                                  objective_input = "nethealth", # what is being maximised
-                                 cet_input = 161, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
+                                 cet_input = 2612, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
                                  drug_budget_input, # size of consumables budget
                                  drug_budget.scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
                                  hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
@@ -99,6 +139,31 @@ find_optimal_package <- function(data.frame, # data on interventions
   drugcost <<- data.frame$drugcost #  Per person cost of drugs and commodities
   maxcoverage <<- data.frame$maxcoverage # Maximum possible coverage based on OneHealth Tool
   cases <<- data.frame$cases # Total number of cases based on OneHealth Tool
+  incremcases <<- data.frame$incremcases #
+  che10 <<- data.frame$che10 #
+  che25 <<- data.frame$che25 #
+  sbche10_0.01 <<- data.frame$sbche10_0.01
+  sbche10_0.1 <<- data.frame$sbche10_0.1
+  sbche10_0.2 <<- data.frame$sbche10_0.2
+  sbche10_0.5 <<- data.frame$sbche10_0.5
+  sbche10_0.8 <<- data.frame$sbche10_0.8
+  sbche10_0.85 <<- data.frame$sbche10_0.85
+  sbche10_0.9 <<- data.frame$sbche10_0.9
+  sbche10_0.95 <<- data.frame$sbche10_0.95
+  sbche10_1 <<- data.frame$sbche10_1
+  sbche10_2 <<- data.frame$sbche10_2
+  sbche10_3 <<- data.frame$sbche10_3
+  sbche10_4 <<- data.frame$sbche10_4
+  sbche10_5 <<- data.frame$sbche10_5
+  sbche10_6 <<- data.frame$sbche10_6
+  sbche10_7 <<- data.frame$sbche10_7
+  sbche10_8 <<- data.frame$sbche10_8
+  sbche10_9 <<- data.frame$sbche10_9
+  sbche10_10 <<- data.frame$sbche10_10
+  sbche10_100 <<- data.frame$sbche10_100
+  sbche10_200 <<- data.frame$sbche10_200
+  sbche10_250 <<- data.frame$sbche10_250
+  sbche10_300 <<- data.frame$sbche10_300
   fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence 
   hrneed <<- as.data.frame(apply(data.frame[,c(12:32)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
   
@@ -110,19 +175,125 @@ find_optimal_package <- function(data.frame, # data on interventions
   
   # Objective - maximize DALYs or Net Health per person X Total number of cases X Coverage
   #****************************************************
+  ## For health outcomes, government pays the full cost of including an intervention i.e. cost per patient * total cases but only gains the DALYs
+  ## of the incremental cases who didn't utilise intervention if excluded i.e. DALYs per patient * incremental cases.
+  ## For CHE, the CHE averted per patient are calculated with full case numbers.
+  
   # Define net health
   cet <- cet_input
-  nethealth <<- dalys - fullcost/cet
+  nethealth <<- (dalys * incremcases) - (fullcost * cases) / cet
+  dalysobj <<- dalys * incremcases
+
+  incl_increm_dalys_avert <<- dalys * incremcases # this is same as dalysobj
+  nhb <<- (dalys*incremcases) - (fullcost * cases) / cet # this is same as nethealth
+  
+  sbche10_0.01 <<- sbche10_0.01
+  sbche10_0.1 <<- sbche10_0.1
+  sbche10_0.2 <<- sbche10_0.2
+  sbche10_0.5 <<- sbche10_0.5
+  sbche10_0.8 <<- sbche10_0.8
+  sbche10_0.85 <<- sbche10_0.85
+  sbche10_0.9 <<- sbche10_0.9
+  sbche10_0.95 <<- sbche10_0.95
+  sbche10_1 <<- sbche10_1
+  sbche10_2 <<- sbche10_2
+  sbche10_3 <<- sbche10_3
+  sbche10_4 <<- sbche10_4
+  sbche10_5 <<- sbche10_5
+  sbche10_6 <<- sbche10_6
+  sbche10_7 <<- sbche10_7
+  sbche10_8 <<- sbche10_8
+  sbche10_9 <<- sbche10_9
+  sbche10_10 <<- sbche10_10
+  sbche10_100 <<- sbche10_100
+  sbche10_200 <<- sbche10_200
+  sbche10_250 <<- sbche10_250
+  sbche10_300 <<- sbche10_300
   
   # Define objective
   if (objective_input == 'nethealth'){
-    objective <<- nethealth * cases
+    objective <<- nethealth
   }
-  else if (objective_input == 'dalys'){
-    objective <<- dalys * cases
+  else if (objective_input == 'dalysobj'){
+    objective <<- dalysobj
+  }
+  else if (objective_input == 'incl_increm_dalys_avert'){
+    objective <<- che10
+  }
+  else if (objective_input == 'nhb'){
+    objective <<- che25
+  }
+  else if (objective_input == 'che10'){
+    objective <<- che10
+  }
+  else if (objective_input == 'che25'){
+    objective <<- che25
+  }
+  else if (objective_input == 'sbche10_0.01'){
+    objective <<- sbche10_0.01
+  }
+  else if (objective_input == 'sbche10_0.1'){
+    objective <<- sbche10_0.1
+  }
+  else if (objective_input == 'sbche10_0.2'){
+    objective <<- sbche10_0.2
+  }
+  else if (objective_input == 'sbche10_0.5'){
+    objective <<- sbche10_0.5
+  }
+  else if (objective_input == 'sbche10_0.8'){
+    objective <<- sbche10_0.8
+  }
+  else if (objective_input == 'sbche10_0.85'){
+    objective <<- sbche10_0.85
+  }
+  else if (objective_input == 'sbche10_0.9'){
+    objective <<- sbche10_0.9
+  }
+  else if (objective_input == 'sbche10_0.95'){
+    objective <<- sbche10_0.95
+  }
+  else if (objective_input == 'sbche10_1'){
+    objective <<- sbche10_1
+  }
+  else if (objective_input == 'sbche10_2'){
+    objective <<- sbche10_2
+  }
+  else if (objective_input == 'sbche10_3'){
+    objective <<- sbche10_3
+  }
+  else if (objective_input == 'sbche10_4'){
+    objective <<- sbche10_4
+  }
+  else if (objective_input == 'sbche10_5'){
+    objective <<- sbche10_5
+  }
+  else if (objective_input == 'sbche10_7'){
+    objective <<- sbche10_7
+  }
+  else if (objective_input == 'sbche10_8'){
+    objective <<- sbche10_8
+  }
+  else if (objective_input == 'sbche10_9'){
+    objective <<- sbche10_9
+  }
+  else if (objective_input == 'sbche10_10'){
+    objective <<- sbche10_10
+  }
+  else if (objective_input == 'sbche10_100'){
+    objective <<- sbche10_100
+  }
+  else if (objective_input == 'sbche10_200'){
+    objective <<- sbche10_200
+  }
+  else if (objective_input == 'sbche10_250'){
+    objective <<- sbche10_250
+  }
+  else if (objective_input == 'sbche10_300'){
+    objective <<- sbche10_300
   }
   else{
-    print('ERROR: objective_input can take values dalys or nethealth')	
+    print('ERROR: objective_input can take values dalysobj, nethealth, che10 or che25')	
   }
   
   # Constraints - 1. Drug Budget, 2. HR Requirements
@@ -138,7 +309,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   hr_minutes_need <- hrneed * cases[row(hrneed)] # HR minutes required to deliver intervention to all cases in need
   
   # Update HR constraints so that nurses, pharmacists, medical officers, etc. represent joint constraints because the HR data
-  # found for Uganda was not detailed enough 
+  # found for Eswatini was not detailed enough 
   colnames(hr_minutes_need)
   medstaff <- hr_minutes_need[,1] + hr_minutes_need[,2]   # Medical officer + Clinical officer
   nursingstaff <- hr_minutes_need[,3] + hr_minutes_need[,4] + hr_minutes_need[,5] # Medical assistant + Nurse officer + Nurse midwife
@@ -419,10 +590,20 @@ find_optimal_package <- function(data.frame, # data on interventions
   intervention.count <<- sum(solution != 0)
   
   # DALY burden averted as a % of avertible DALY burden
-  solution_dalysaverted <<- solution * cases * dalys # Dalys averted per intervention
-  dalysavertible = cases * dalys # Total DALYs that can be averted at maximum coverage
+  solution_dalysaverted <<- solution * incremcases * dalys # Incremental DALYs averted per intervention
+  dalysavertible = incremcases * dalys # Total incremental DALYs that can be averted at maximum coverage
   dalys_averted <<- round(sum(unlist(lapply(solution_dalysaverted, sum))),2)
   dalys_averted.prop <<- sum(unlist(lapply(solution_dalysaverted, sum)))/sum(unlist(lapply(dalysavertible, sum)))
+  
+  # CHE cases averted for each CHE threshold (10% & 25%) - use cases (not incremental cases) as this is how che cases averted per patient was calculated
+  solution_che10averted <<- solution  * che10   
+  solution_che25averted <<- solution * che25   
+  che10avertible = che10 
+  che25avertible = che25 
+  che10_averted <<- round(sum(unlist(lapply(solution_che10averted, sum))),2)
+  che25_averted <<- round(sum(unlist(lapply(solution_che25averted, sum))),2)
+  che10_averted.prop <<- sum(unlist(lapply(solution_che10averted, sum)))/sum(unlist(lapply(che10avertible, sum)))
+  che25_averted.prop <<- sum(unlist(lapply(solution_che25averted, sum)))/sum(unlist(lapply(che25avertible, sum)))
   
   # Drugs and Commodities cost (% of budget available)
   solution_drugexp <<- solution*cons_drug[1:length(dalys),] # Total drug budget required per intervention for the  the optimal solution
@@ -459,7 +640,11 @@ find_optimal_package <- function(data.frame, # data on interventions
                   "Number of interventions in the optimal package" = intervention.count,
                   "Net DALYs averted" = solution.class$objval,
                   "Total DALYs averted" = sum(unlist(lapply(solution_dalysaverted, sum))), 
-                  "Proportion of DALY burden averted" = dalys_averted.prop , 
+                  "Proportion of DALY burden averted" = dalys_averted.prop, 
+                  "Total CHE cases (10% threshold) averted"= sum(unlist(lapply(solution_che10averted, sum))),
+                  "Proportion of CHE cases (10% threshold) averted" = che10_averted.prop,
+                  "Total CHE cases (25% threshold) averted"= sum(unlist(lapply(solution_che25averted, sum))), 
+                  "Proportion of CHE cases (25% threshold) averted" = che25_averted.prop,
                   "Proportion of drug budget used" = drug_exp.prop, 
                   "Proportion of HR capacity used by cadre" = hruse.prop,
                   "CET based on solution" =  cet_soln
@@ -473,7 +658,7 @@ find_optimal_package <- function(data.frame, # data on interventions
 # Note that in order to run this function, find_optimal_package needs to be run first
 gen_resourceuse_graphs <- function(plot_title, file_name){
   #pal <- viridisLite::viridis(10) # Create a viridis palette for the graph
-  pal <- rainbow(10)
+  pal <- rainbow(11)
   
   ## Generate matrix representing HR and Drug budget use by the HBP solution run above
   #--------------------------------------------------------------------------------------
