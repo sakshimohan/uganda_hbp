@@ -34,7 +34,8 @@ library(viridis) # load viridis colour palette
 ##############################
 # 1 - Set Working Directory
 ##############################
-setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
+#setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
+setwd("/Users/sm2511/Dropbox/York/Research Projects/NIH Eswatini/HBP/")
 
 ###################################
 # 2 - Load and set up data for LPP
@@ -42,6 +43,7 @@ setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
 # Load epi/cost/CE dataset 
 #****************************************************
 df <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+
 # Load HR availability dataset
 #****************************************************
 df_hr <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
