@@ -212,90 +212,29 @@ find_optimal_package <- function(data.frame, # data on interventions
   sbche10_250 <<- sbche10_250
   sbche10_300 <<- sbche10_300
   
-  # Define objective
-  if (objective_input == 'nethealth'){
-    objective <<- nethealth
+  # Objective mapping
+  objective_map <- list(
+    nethealth = nethealth,
+    dalysobj = dalysobj,
+    incl_increm_dalys_avert = incl_increm_dalys_avert,
+    nhb = nhb,
+    che10 = che10,
+    che25 = che25
+  )
+  
+  # Dynamically add sbche10 values
+  for (v in c(
+    "0.01", "0.1", "0.2", "0.5", "0.8", "0.85", "0.9", "0.95", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "200", "250", "300"
+  )) {
+    name <- paste0("sbche10_", v)
+    objective_map[[name]] <- get(name)
   }
-  else if (objective_input == 'dalysobj'){
-    objective <<- dalysobj
-  }
-  else if (objective_input == 'incl_increm_dalys_avert'){
-    objective <<- che10
-  }
-  else if (objective_input == 'nhb'){
-    objective <<- che25
-  }
-  else if (objective_input == 'che10'){
-    objective <<- che10
-  }
-  else if (objective_input == 'che25'){
-    objective <<- che25
-  }
-  else if (objective_input == 'sbche10_0.01'){
-    objective <<- sbche10_0.01
-  }
-  else if (objective_input == 'sbche10_0.1'){
-    objective <<- sbche10_0.1
-  }
-  else if (objective_input == 'sbche10_0.2'){
-    objective <<- sbche10_0.2
-  }
-  else if (objective_input == 'sbche10_0.5'){
-    objective <<- sbche10_0.5
-  }
-  else if (objective_input == 'sbche10_0.8'){
-    objective <<- sbche10_0.8
-  }
-  else if (objective_input == 'sbche10_0.85'){
-    objective <<- sbche10_0.85
-  }
-  else if (objective_input == 'sbche10_0.9'){
-    objective <<- sbche10_0.9
-  }
-  else if (objective_input == 'sbche10_0.95'){
-    objective <<- sbche10_0.95
-  }
-  else if (objective_input == 'sbche10_1'){
-    objective <<- sbche10_1
-  }
-  else if (objective_input == 'sbche10_2'){
-    objective <<- sbche10_2
-  }
-  else if (objective_input == 'sbche10_3'){
-    objective <<- sbche10_3
-  }
-  else if (objective_input == 'sbche10_4'){
-    objective <<- sbche10_4
-  }
-  else if (objective_input == 'sbche10_5'){
-    objective <<- sbche10_5
-  }
-  else if (objective_input == 'sbche10_7'){
-    objective <<- sbche10_7
-  }
-  else if (objective_input == 'sbche10_8'){
-    objective <<- sbche10_8
-  }
-  else if (objective_input == 'sbche10_9'){
-    objective <<- sbche10_9
-  }
-  else if (objective_input == 'sbche10_10'){
-    objective <<- sbche10_10
-  }
-  else if (objective_input == 'sbche10_100'){
-    objective <<- sbche10_100
-  }
-  else if (objective_input == 'sbche10_200'){
-    objective <<- sbche10_200
-  }
-  else if (objective_input == 'sbche10_250'){
-    objective <<- sbche10_250
-  }
-  else if (objective_input == 'sbche10_300'){
-    objective <<- sbche10_300
-  }
-  else{
-    print('ERROR: objective_input can take values dalysobj, nethealth, che10 or che25')	
+  
+  # Assign objective
+  if (objective_input %in% names(objective_map)) {
+    objective <<- objective_map[[objective_input]]
+  } else {
+    stop("ERROR: objective_input must be one of ", paste(names(objective_map), collapse = ", "))
   }
   
   # Constraints - 1. Drug Budget, 2. HR Requirements
