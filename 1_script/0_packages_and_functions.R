@@ -347,11 +347,9 @@ find_optimal_package <- function(data.frame, # data on interventions
   cons.feascov <<- diag(x = cases, n, n)
   if (use_feasiblecov_constraint == 1){
     cons.feascov.limit <<- as.matrix(pmin(maxcoverage * feascov_scale * cases, cases)) # changed the constraint on 12May (multiplied by cases)
-  }
-  else if (use_feasiblecov_constraint == 0){
+  } else if (use_feasiblecov_constraint == 0){
     cons.feascov.limit <<- as.matrix(cases) # changed the constraint on 12May (multiplied by cases)
-  }
-  else{
+  } else{
     print('ERROR: use_feasiblecov_constraint can take values 0 or 1')
   }  
   
