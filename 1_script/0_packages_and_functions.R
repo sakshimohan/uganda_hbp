@@ -87,37 +87,17 @@ N <- length(df$dalys) # total number of interventions included in the analysis
 df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10pp', 'che25pp'), as.numeric)
 str(df) # ^^ check format of all columns ^^	
 
+# Calculate number of CHE cases averted
 df$che10 <- df$che10pp * df$cases   
 df$che25 <- df$che25pp * df$cases   
 
-df$cet <- 2612
-df$incl_increm_dalys_avert <- df$dalys * df$incremcases # this is same as dalysobj
-df$nhb <- (df$dalys*df$incremcases) - (df$fullcost * df$cases) / df$cet # this is same as nethealth
-
-## Creating single (combined) objective to optimise based on policy-chosen trade-off parameter k
-
-## weights that appear in the denominator
-w <- c(0.01, 0.1, 0.2, 0.5, 0.8, 0.85, 0.9, 0.95,
-       1,  2, 3, 4, 5, 6, 7, 8, 9, 10,
-       100, 200, 250, 300)
-
-## Creating single social benefit objective using CHE10 
-for (k in w) {
-  col_name <- paste0("sbche10_", k)
-  df[[col_name]] <- df$incl_increm_dalys_avert + df$che10 / k
-}
-
-## Creating single social benefit objective using CHE25 
-for (k in w) {
-  col_name <- paste0("sbche25_", k)
-  df[[col_name]] <- df$incl_increm_dalys_avert + df$che25 / k
-}
 
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
 find_optimal_package <- function(data.frame, # data on interventions 
                                  objective_input = "nethealth", # what is being maximised
+                                 weight_dalys_per_1_che = 1, # if objective input is both DALYs and CHE
                                  cet_input = 2612, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
                                  drug_budget_input, # size of consumables budget
                                  drug_budget.scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
@@ -137,31 +117,9 @@ find_optimal_package <- function(data.frame, # data on interventions
   drugcost <<- data.frame$drugcost #  Per person cost of drugs and commodities
   maxcoverage <<- data.frame$maxcoverage # Maximum possible coverage based on OneHealth Tool
   cases <<- data.frame$cases # Total number of cases based on OneHealth Tool
-  incremcases <<- data.frame$incremcases #
-  che10 <<- data.frame$che10 #
-  che25 <<- data.frame$che25 #
-  sbche10_0.01 <<- data.frame$sbche10_0.01
-  sbche10_0.1 <<- data.frame$sbche10_0.1
-  sbche10_0.2 <<- data.frame$sbche10_0.2
-  sbche10_0.5 <<- data.frame$sbche10_0.5
-  sbche10_0.8 <<- data.frame$sbche10_0.8
-  sbche10_0.85 <<- data.frame$sbche10_0.85
-  sbche10_0.9 <<- data.frame$sbche10_0.9
-  sbche10_0.95 <<- data.frame$sbche10_0.95
-  sbche10_1 <<- data.frame$sbche10_1
-  sbche10_2 <<- data.frame$sbche10_2
-  sbche10_3 <<- data.frame$sbche10_3
-  sbche10_4 <<- data.frame$sbche10_4
-  sbche10_5 <<- data.frame$sbche10_5
-  sbche10_6 <<- data.frame$sbche10_6
-  sbche10_7 <<- data.frame$sbche10_7
-  sbche10_8 <<- data.frame$sbche10_8
-  sbche10_9 <<- data.frame$sbche10_9
-  sbche10_10 <<- data.frame$sbche10_10
-  sbche10_100 <<- data.frame$sbche10_100
-  sbche10_200 <<- data.frame$sbche10_200
-  sbche10_250 <<- data.frame$sbche10_250
-  sbche10_300 <<- data.frame$sbche10_300
+  incremcases <<- data.frame$incremcases # Number of incremental cases treated through inclusion in the HBP (over an above those who would get treated anyway through OOP)
+  che10 <<- data.frame$che10 # Number of CHE cases created by exclusion of intervention (assume CHE is OOP > 10% of HH income)
+  che25 <<- data.frame$che25 #  Number of CHE cases created by exclusion of intervention (assume CHE is OOP > 25% of HH income)
   fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence 
   hrneed <<- as.data.frame(apply(data.frame[,c(12:32)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
   
@@ -176,55 +134,29 @@ find_optimal_package <- function(data.frame, # data on interventions
   ## For health outcomes, government pays the full cost of including an intervention i.e. cost per patient * total cases but only gains the DALYs
   ## of the incremental cases who didn't utilise intervention if excluded i.e. DALYs per patient * incremental cases.
   ## For CHE, the CHE averted per patient are calculated with full case numbers.
-  
   # Define net health
   cet <- cet_input
   nethealth <<- (dalys * incremcases) - (fullcost * cases) / cet
-  dalysobj <<- dalys * incremcases
-
-  incl_increm_dalys_avert <<- dalys * incremcases # this is same as dalysobj
-  nhb <<- (dalys*incremcases) - (fullcost * cases) / cet # this is same as nethealth
+  dalys <<- dalys * incremcases
+  che10 <<- che10
+  che25 <<- che25
   
-  sbche10_0.01 <<- sbche10_0.01
-  sbche10_0.1 <<- sbche10_0.1
-  sbche10_0.2 <<- sbche10_0.2
-  sbche10_0.5 <<- sbche10_0.5
-  sbche10_0.8 <<- sbche10_0.8
-  sbche10_0.85 <<- sbche10_0.85
-  sbche10_0.9 <<- sbche10_0.9
-  sbche10_0.95 <<- sbche10_0.95
-  sbche10_1 <<- sbche10_1
-  sbche10_2 <<- sbche10_2
-  sbche10_3 <<- sbche10_3
-  sbche10_4 <<- sbche10_4
-  sbche10_5 <<- sbche10_5
-  sbche10_6 <<- sbche10_6
-  sbche10_7 <<- sbche10_7
-  sbche10_8 <<- sbche10_8
-  sbche10_9 <<- sbche10_9
-  sbche10_10 <<- sbche10_10
-  sbche10_100 <<- sbche10_100
-  sbche10_200 <<- sbche10_200
-  sbche10_250 <<- sbche10_250
-  sbche10_300 <<- sbche10_300
+  # if multiple objectives are included
+  if (objective_input %in% c("dalys_and_frp_che10", "dalys_and_frp_che25")) {
+    k <- weight_dalys_per_1_che
+  }
+  dalys_and_frp_che10 <<- dalys * incremcases + che10 * k
+  dalys_and_frp_che25 <<- dalys * incremcases + che25 * k 
   
   # Objective mapping
   objective_map <- list(
     nethealth = nethealth,
-    dalysobj = dalysobj,
-    incl_increm_dalys_avert = incl_increm_dalys_avert,
-    nhb = nhb,
+    dalys = dalys,
     che10 = che10,
-    che25 = che25
+    che25 = che25,
+    dalys_and_frp_che10 = dalys_and_frp_che10,
+    dalys_and_frp_che25 = dalys_and_frp_che25
   )
-  
-  # Dynamically add sbche10 values
-  for (v in c(
-    "0.01", "0.1", "0.2", "0.5", "0.8", "0.85", "0.9", "0.95", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "200", "250", "300"
-  )) {
-    name <- paste0("sbche10_", v)
-    objective_map[[name]] <- get(name)
-  }
   
   # Assign objective
   if (objective_input %in% names(objective_map)) {
@@ -327,14 +259,14 @@ find_optimal_package <- function(data.frame, # data on interventions
   #--------------------------------------
   cons_hr <<- as.matrix(cons_hr)
   cons_hr.limit <<- as.matrix(cons_hr.limit)
-  dim(cons_hr) # = 111 X 8
+  dim(cons_hr) # = N X 8
   dim(cons_hr.limit)  # = 1 X 8
   
   # 2. Drug
   #--------------------------------------
   cons_drug <<-as.matrix(cons_drug)
   cons_drug.limit <<- as.matrix(cons_drug.limit)
-  dim(cons_drug) # = 111 X 1
+  dim(cons_drug) # = N X 1
   dim(cons_drug.limit) # = 1 X 1
   
   # 3. Max coverage
@@ -403,7 +335,7 @@ find_optimal_package <- function(data.frame, # data on interventions
       counter = counter + 1
     } 
     cons_complements <<- t(cons_complements)
-   } else{cons_complements <<- t(cons_complements)}
+  } else{cons_complements <<- t(cons_complements)}
   
   # 6. Substitute interventions
   #--------------------------------------
@@ -603,7 +535,7 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   
   # Drug budget Use
   data_drug <- as.matrix(solution_drugexp)/cons_drug.limit_base
-
+  
   length(data_drug) = dim(data_hr)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
   # Combine all resource use matrices into one matrix
