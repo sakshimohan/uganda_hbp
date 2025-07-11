@@ -84,7 +84,7 @@ names(df)[names(df) == 'CHE cases averted per patient (10% threshold)'] <- 'che1
 N <- length(df$dalys) # total number of interventions included in the analysis
 
 # Convert columns to numeric
-df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10', 'che25'), as.numeric)
+df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10pp', 'che25pp'), as.numeric)
 str(df) # ^^ check format of all columns ^^	
 
 df$che10 <- df$che10pp * df$cases   
