@@ -141,22 +141,21 @@ find_optimal_package <- function(data.frame, # data on interventions
   che10 <<- che10
   che25 <<- che25
   
-  # if multiple objectives are included
-  if (objective_input %in% c("dalys_and_frp_che10", "dalys_and_frp_che25")) {
-    k <- weight_dalys_per_1_che
-  }
-  dalys_and_frp_che10 <<- dalys * incremcases + che10 * k
-  dalys_and_frp_che25 <<- dalys * incremcases + che25 * k 
-  
   # Objective mapping
   objective_map <- list(
     nethealth = nethealth,
     dalys = dalys,
     che10 = che10,
-    che25 = che25,
-    dalys_and_frp_che10 = dalys_and_frp_che10,
-    dalys_and_frp_che25 = dalys_and_frp_che25
-  )
+    che25 = che25)
+  
+  # if multiple objectives are included
+  if (objective_input %in% c("dalys_and_frp_che10", "dalys_and_frp_che25")) {
+    k <- weight_dalys_per_1_che
+    dalys_and_frp_che10 <<- dalys * incremcases + che10 * k
+    dalys_and_frp_che25 <<- dalys * incremcases + che25 * k
+    objective_map[["dalys_and_frp_che10"]] <- dalys_and_frp_che10
+    objective_map[["dalys_and_frp_che25"]] <- dalys_and_frp_che25
+  }
   
   # Assign objective
   if (objective_input %in% names(objective_map)) {
@@ -410,7 +409,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   print(paste("Dimension - Compulsory interventions constraint:", paste( unlist(dim(t(cons_compulsory))), collapse=' ')))
   print(paste("Dimension - Substitutes constraint:", paste( unlist(dim(t(cons_substitutes))), collapse=' ')))
   print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
-  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), cons_complements) # LHS
   cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
   print(paste("Dimension of LHS", paste( unlist(dim(cons.mat)), collapse=' '))) # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X N
   print(paste("Dimension of RHS", paste( unlist(dim(cons.mat.limit)), collapse=' ')))  # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X 1
@@ -459,7 +458,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   dalys_averted.prop <<- sum(unlist(lapply(solution_dalysaverted, sum)))/sum(unlist(lapply(dalysavertible, sum)))
   
   # CHE cases averted for each CHE threshold (10% & 25%) - use cases (not incremental cases) as this is how che cases averted per patient was calculated
-  solution_che10averted <<- solution  * che10   
+  solution_che10averted <<- solution  * che10 # if the solution is 10% of cases covered by HBP, then 10% of CHE cases would be averted
   solution_che25averted <<- solution * che25   
   che10avertible = che10 
   che25avertible = che25 
