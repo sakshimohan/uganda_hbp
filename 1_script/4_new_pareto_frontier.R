@@ -46,9 +46,7 @@ comp_nested_list = list(comp_nested1 = c("003", "004", 0.05), # Safe abortion, p
 
 # Compulsory interventions
 #--------------------
-compulsory_list = list(compulsory1 = c("92"), # ART for men
-                       compulsory2 = c("93") # ART for women
-)
+compulsory_list = NULL
 
 ## Find extreme solutions
 
@@ -142,6 +140,7 @@ results_df <- do.call(rbind, results_list)
 
 library(ggplot2)
 
+# Pareto frontier
 ggplot(results_df, aes(x = daly_averted, y = che10_averted, color = k)) +
   geom_point(size = 2) +
   scale_color_viridis_c() +
@@ -152,3 +151,17 @@ ggplot(results_df, aes(x = daly_averted, y = che10_averted, color = k)) +
     title = "Trade-off Between Health and Financial Risk Protection"
   ) +
   theme_minimal()
+
+# CHE at differnt levels of k
+plot(results_df$k, results_df$che10_averted,
+     type = "b", pch = 19, col = "darkred",
+     xlab = "k (DALYs per 1 CHE)",
+     ylab = "Proportion of CHE Cases Averted (10%)",
+     main = "CHE Averted vs. k")
+
+# DALYs averted at differnt levels of k
+plot(results_df$k, results_df$daly_averted,
+     type = "b", pch = 19, col = "darkgreen",
+     xlab = "k (DALYs per 1 CHE)",
+     ylab = "Proportion of DALY Burden Averted",
+     main = "DALYs Averted vs. k")
