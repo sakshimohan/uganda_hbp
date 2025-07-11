@@ -72,7 +72,7 @@ stopifnot(0.99 < simulated_gini / gini, simulated_gini / gini < 1.01) # This mak
 ## Load frp parameter data 
 print("USING FILE:")
 print(file)
-data <- read.xls(file, sheet="frp" , header=T , stringsAsFactors=F)
+data <- read_excel(path = file, sheet = "frp")
 
 ###################################
 # 2 - Calculating CHE cases averted  
