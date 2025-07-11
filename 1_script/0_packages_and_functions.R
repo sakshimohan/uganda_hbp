@@ -78,18 +78,14 @@ names(df)[names(df) == 'Cases_full_2024'] <- 'cases'
 names(df)[names(df) == 'Increm_cases_2024'] <- 'incremcases' 
 names(df)[names(df) == 'Code'] <- 'intcode'
 names(df)[names(df) == 'Category'] <- 'category'
-names(df)[names(df) == 'CHE cases averted per patient (25% threshold)'] <- 'che25'
-names(df)[names(df) == 'CHE cases averted per patient (10% threshold)'] <- 'che10'
+names(df)[names(df) == 'CHE cases averted per patient (25% threshold)'] <- 'che25pp'
+names(df)[names(df) == 'CHE cases averted per patient (10% threshold)'] <- 'che10pp'
 
 N <- length(df$dalys) # total number of interventions included in the analysis
 
 # Convert columns to numeric
 df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10', 'che25'), as.numeric)
 str(df) # ^^ check format of all columns ^^	
-
-# Renaming variables 
-names(df)[names(df) == 'che10'] <- 'che10pp' # rename che10
-names(df)[names(df) == 'che25'] <- 'che25pp' # rename che25 
 
 df$che10 <- df$che10pp * df$cases   
 df$che25 <- df$che25pp * df$cases   
@@ -373,8 +369,7 @@ find_optimal_package <- function(data.frame, # data on interventions
       cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compcov_scale, cases[a]) # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
     }
     dim(cons_compulsory)
-  }
-  else if(length(compulsory_interventions) == 0){
+  } else if(length(compulsory_interventions) == 0){
     comp.count<- 1
     cons_compulsory <<- matrix(0L, 1, ncol = n)
     cons_compulsory.limit <<- matrix(0L, 1, ncol = 1)
@@ -408,7 +403,7 @@ find_optimal_package <- function(data.frame, # data on interventions
       counter = counter + 1
     } 
     cons_complements <<- t(cons_complements)
-   }else{cons_complements <<- t(cons_complements)}
+   } else{cons_complements <<- t(cons_complements)}
   
   # 6. Substitute interventions
   #--------------------------------------
