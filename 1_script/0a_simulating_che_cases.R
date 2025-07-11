@@ -1,19 +1,26 @@
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#############################################################
+## Generating input data for Financial Risk Protection considerations
+## Created by: Finn McGuire; 13/12/20. Revised by Sakshi Mohan; 11/07/2025
 
-## Analysis with Dual Objectives: Health Maximisation & FRP ##
+## The goal of this script is to generate the number of expected cases of CHE for each intervention
+## based on the following inputs - 
+# Number of eligible cases for each intervention
+# Percentage of cases who would seek care through OOP if the intervention was excluded from the HBP
+# OOP associated with each service
+# Gini coefficient and averahe HH income used to estimate the income levels of a simulated set of households
 
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+# For each intervention, we first randomly choose the HH income for individuals who will seek care through OOP.
+# We then estimate the % of cases for whol this OOP is > the cuttoff percentage of HH income (for it to be counted as a CHE)
+
+## N.B: This code has been run before the scripts '0_...' and '1_...' to generate the CHE cases at intervention level and plug into the excel files.
+#############################################################
+rm(list = ls()) # Remove all objects in the global environment
+cat("\014") # To clear the console
 
 #############################################
 # 1 - Set up and simulating household incomes
 #############################################
-
-## N.B: This code has been run before the scripts '0_...' and '1_...' to generate the CHE cases at intervention level and plug into the excel files.
-
-# Remove all objects in the global environment
-rm(list = ls())
-# To clear the console
-cat("\014")
+# This step generates Household income levels based on the current average HH income level and the Gini coefficient of income levels
 
 ##Generating the household income draws
 #setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
@@ -26,16 +33,10 @@ gini <- 0.493 ## From Eswatini Household Income and Expenditure Survey 2016/17 F
 ave_hh_consumption <-  896.50 ## Mean per person household consumption (US$2023) -- From Eswatini Household Income and Expenditure Survey 2016/17 Final Report (2019).
 ## Could also use Mean per person household income (US$2023) = 1,378.14 from same source. Original figures given in 2019 SZL, see excel for conversion.
 
-total.draws <- 100000 ## number of household income's to generate - note this is arbitrary because we calculate CHE cases by pulling incomes from this distribution with replacement later. 
+total.draws <- 1000000 ## number of household income's to generate - note this is arbitrary because we calculate CHE cases by pulling incomes from this distribution with replacement later. 
 
-## define income cutoffs
+## define income cutoffs (i.e. % of annual income spent on OOP which would be considered a CHE)
 cutoffs <- c(0.1,0.25)
-
-## define marginal productivity of health care expenditure in Eswatini (cost-effectiveness threshold)
-base.cet <- 2612 # This value is in 2023 USD (Lomas et al. 2022)
-
-##Drug and Supplies buget
-base.drugbudget <-38269715
 
 ## set seed
 set.seed(21052025)
@@ -70,6 +71,7 @@ simulated_gini = estimate_gini(hh.incomes$hh.incomes)
 stopifnot(0.99 < simulated_gini / gini, simulated_gini / gini < 1.01) # This makes sure that the gini coefficient of the simulated income levels is within 1% of the actual gini coefficient
 
 ## Load frp parameter data 
+# This includes data on the number of cases which would seek case if intervention is excluded from package (excl_case_numbers) and oop_cost
 print("USING FILE:")
 print(file)
 data <- read_excel(path = file, sheet = "frp")
@@ -105,6 +107,8 @@ for(r in 1:dim(data)[1]) {
 }  # close row loop
 
 ## Calculating Net Health Benefit
+## define marginal productivity of health care expenditure in Eswatini (cost-effectiveness threshold)
+base.cet <- 2612 # This value is in 2023 USD (Lomas et al. 2022)
 data$nhb <- data$incl_increm_dalys_avert - data$total_cost_orig_study / base.cet
 
 ## save output
