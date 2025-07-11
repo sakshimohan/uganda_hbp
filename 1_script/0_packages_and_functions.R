@@ -282,9 +282,9 @@ find_optimal_package <- function(data.frame, # data on interventions
   }  
   
   nonneg.lim <<- as.matrix(rep(0,n))
-  dim(cons.feascov) # 111 X 111
-  dim(cons.feascov.limit) # 111 X 1
-  dim(nonneg.lim) # 111 X 1
+  dim(cons.feascov) # N X N
+  dim(cons.feascov.limit) # N X 1
+  dim(nonneg.lim) # N X 1
   
   # 4. Compulsory interventions
   #--------------------------------------
@@ -297,7 +297,6 @@ find_optimal_package <- function(data.frame, # data on interventions
       b <- data.frame$intervention[a]
       #print(paste("Compulsory intervention: ",b, "; Code: ", compulsory_interventions[i], "; Number ",a ))
       cons_compulsory[i,a] <<- cases[a]
-      # CHECK THIS CHANGE MADE on 26Aug21
       cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compcov_scale, cases[a]) # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
     }
     dim(cons_compulsory)
@@ -329,7 +328,7 @@ find_optimal_package <- function(data.frame, # data on interventions
       nested_intervention_location <- which(data.frame$intcode == complements_nested[[i]][2])
       nested_intervention <- data.frame$intervention[nested_intervention_location]
       print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", nested_intervention, "; Code: ", complements_nested[[1]][2] , "; (Proportion: ",as.numeric(complements_nested[[i]][3]), ")"))
-      cons_complements[counter,base] <<- cases_base * as.numeric(complements_nested[[i]][3])
+      cons_complements[counter,base] <- cases_base * as.numeric(complements_nested[[i]][3])
       cons_complements[counter,nested_intervention_location] <<- - cases[nested_intervention_location]
       
       counter = counter + 1
@@ -386,8 +385,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   # Update the constraint matrices if task shifting is allowed
   if (task_shifting_pharm == 0){
     print("No task shifting of pharmaceutical tasks")
-  }
-  else if (task_shifting_pharm == 1){
+  }else if (task_shifting_pharm == 1){
     #1. Objective
     objective <<- duplicate_matrix_horizontally(reps, as.matrix(objective))
     #2. Drug budget constraint (cons_drug.limit does not need to be changed)
@@ -400,8 +398,7 @@ find_optimal_package <- function(data.frame, # data on interventions
     cons_complements <<- duplicate_matrix_horizontally(reps,as.matrix(cons_complements))
     #6. Substitutes
     cons_substitutes <<- duplicate_matrix_horizontally(reps,as.matrix(cons_substitutes))
-  }
-  else{
+  } else{
     print('ERROR: task_shifting_pharm can take values 0 or 1')
   }
   
@@ -419,10 +416,10 @@ find_optimal_package <- function(data.frame, # data on interventions
   print(paste("Dimension of RHS", paste( unlist(dim(cons.mat.limit)), collapse=' ')))  # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X 1
   
   # Direction of relationship
-  cons.dir <- rep("<=",1+8+n)
-  cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count))
-  cons.dir <- c(cons.dir,rep("<=",length(substitutes)))
-  cons.dir <- c(cons.dir, rep(">=", length(complements_nested)))
+  cons.dir <- rep("<=",1+8+n) # Drug + HR + Max coverage
+  cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count)) # Nonneg limit, Compulsory interventions
+  cons.dir <- c(cons.dir,rep("<=",length(substitutes))) # Substitutes
+  cons.dir <- c(cons.dir, rep(">=", length(complements_nested))) # Complements
   length(cons.dir)
   length(cons.dir) = dim(cons.mat.limit)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
