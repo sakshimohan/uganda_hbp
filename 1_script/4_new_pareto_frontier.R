@@ -156,12 +156,12 @@ ggplot(results_df, aes(x = daly_averted, y = che10_averted, color = k)) +
 plot(results_df$k, results_df$che10_averted,
      type = "b", pch = 19, col = "darkred",
      xlab = "k (DALYs per 1 CHE)",
-     ylab = "Proportion of CHE Cases Averted (10%)",
+     ylab = "# CHE Cases Averted (10%)",
      main = "CHE Averted vs. k")
 
 # DALYs averted at differnt levels of k
 plot(results_df$k, results_df$daly_averted,
      type = "b", pch = 19, col = "darkgreen",
      xlab = "k (DALYs per 1 CHE)",
-     ylab = "Proportion of DALY Burden Averted",
+     ylab = "# DALY Burden Averted",
      main = "DALYs Averted vs. k")
