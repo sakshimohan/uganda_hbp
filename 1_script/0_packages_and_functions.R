@@ -142,7 +142,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   che25 <<- che25
   
   # Objective mapping
-  objective_map <- list(
+  objective_map <<- list(
     nethealth = nethealth,
     dalys = dalys,
     che10 = che10,
@@ -151,10 +151,10 @@ find_optimal_package <- function(data.frame, # data on interventions
   # if multiple objectives are included
   if (objective_input %in% c("dalys_and_frp_che10", "dalys_and_frp_che25")) {
     k <- weight_dalys_per_1_che
-    dalys_and_frp_che10 <<- dalys * incremcases + che10 * k
-    dalys_and_frp_che25 <<- dalys * incremcases + che25 * k
-    objective_map[["dalys_and_frp_che10"]] <- dalys_and_frp_che10
-    objective_map[["dalys_and_frp_che25"]] <- dalys_and_frp_che25
+    dalys_and_frp_che10 <<- dalys + che10 * k
+    dalys_and_frp_che25 <<- dalys + che25 * k
+    objective_map[["dalys_and_frp_che10"]] <<- dalys_and_frp_che10
+    objective_map[["dalys_and_frp_che25"]] <<- dalys_and_frp_che25
   }
   
   # Assign objective
