@@ -1,16 +1,23 @@
 #############################################################
-## Linear Programming Function to optimize Uganda's Health Benefits Package
+## Linear Programming Function to optimize Eswatini's Health Benefits Package
 
-## Created by: Sakshi Mohan; 13/12/20
+## Created by: Sakshi Mohan; 13/12/20. Revised by Finn McGuire; 16/06/25
 
 ## This file creates the linear constrained optimisation function to be used in
 # scenario generation
 #############################################################
 
+# Remove all objects in the global environment
+rm(list = ls())
+# To clear the console
+cat("\014")
+
 ##############################
 # 0 - Load librairies
 ##############################
 # Note the following packages need to be installed  readxl, lpSolveAPI, checkData, fmsb
+# install.packages(c("lpSolve", "readxl", "lpSolveAPI", "checkData", "fmsb"))
+
 library(readxl)
 library(lpSolve)
 library(tidyverse)
@@ -27,30 +34,32 @@ library(viridis) # load viridis colour palette
 ##############################
 # 1 - Set Working Directory
 ##############################
-setwd("C:/Users/sm2511/Dropbox/York/Research Projects/Uganda EHP/Analysis/repo/uganda_hbp/")
+#setwd("/Users/finn/Documents/Work/York/NIH HIV in Eswatini NYU/Analysis/")
+setwd("/Users/sm2511/Dropbox/York/Research Projects/NIH Eswatini/HBP/")
 
 ###################################
 # 2 - Load and set up data for LPP
 ###################################
 # Load epi/cost/CE dataset 
 #****************************************************
-df <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+df <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "data",col_names = TRUE,col_types=NULL,na="",skip=0)
+
 # Load HR availability dataset
 #****************************************************
-df_hr <- read_excel("2_data/hbp_data_clean_v2.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
+df_hr <- read_excel("2_data/Eswatini_HBP_Tool_for_R_script_v2_increm.xlsx", sheet = "hr_constraint",col_names = TRUE,col_types=NULL,na="",skip=0)
 
 # Set up dataframes
 #****************************************************
-colnames(df) = df[2,] # remove first two rows
-df <- df[-c(1:2),]  # remove first two columns
-df <- df[,c(1:32)]	# remove columns after 32
-df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Uganda)`)]
+colnames(df) = df[2,] # make row 2 the column names
+df <- df[-c(1:2),]  # remove first two rows
+df <- df[,c(1:32, 36:38)]	# remove columns except 1-32 & 36-38
+df <- na.omit(df) # drop rows containing missing values #df[!is.na(df$`DALYs averted per patient (Eswatini)`)]
 
 colnames(df_hr) = df_hr[1,] # remove first row
 
 # Extract .csv versions of input data
-write.csv(df, file = "3_processing/uganda_intervention_data.csv")
-write.csv(df_hr, file = "3_processing/uganda_hr_data.csv")
+write.csv(df, file = "3_processing/eswatini_intervention_data.csv")
+write.csv(df_hr, file = "3_processing/eswatini_hr_data.csv")
 
 # Set up HR constraint dataframes
 #****************************************************
@@ -60,27 +69,36 @@ hr_size <- as.numeric(df_hr$'Total staff'[2:9]) # size of health workforce
 # Generate relevant lists from dataset
 #****************************************************
 # Rename columns
-names(df)[names(df) == 'DALYs averted per patient (Uganda)'] <- 'dalys'
-names(df)[names(df) == 'Average drugs and commodities cost (2019 USD)'] <- 'drugcost'
+names(df)[names(df) == 'DALYs averted per patient (Eswatini)'] <- 'dalys'
+names(df)[names(df) == 'Average drugs and commodities cost (2023 USD)'] <- 'drugcost'
 names(df)[names(df) == 'Coverage_2024'] <- 'maxcoverage' # Maximum feasible coverage in 2024 as per OneHealth Tool
-names(df)[names(df) == 'Cost per case (Uganda) - 2019 USD'] <- 'fullcost'
+names(df)[names(df) == 'Cost per case (Eswatini) - 2023 USD'] <- 'fullcost'
 names(df)[names(df) == 'Intervention'] <- 'intervention'
-names(df)[names(df) == 'Cases_full_2020'] <- 'cases'
+names(df)[names(df) == 'Cases_full_2024'] <- 'cases'
+names(df)[names(df) == 'Increm_cases_2024'] <- 'incremcases' 
 names(df)[names(df) == 'Code'] <- 'intcode'
 names(df)[names(df) == 'Category'] <- 'category'
+names(df)[names(df) == 'CHE cases averted per patient (25% threshold)'] <- 'che25pp'
+names(df)[names(df) == 'CHE cases averted per patient (10% threshold)'] <- 'che10pp'
 
 N <- length(df$dalys) # total number of interventions included in the analysis
 
 # Convert columns to numeric
-df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases'), as.numeric)
+df <- df %>% mutate_at(c('drugcost', 'dalys', 'maxcoverage', 'fullcost', 'cases', 'incremcases', 'che10pp', 'che25pp'), as.numeric)
 str(df) # ^^ check format of all columns ^^	
+
+# Calculate number of CHE cases averted
+df$che10 <- df$che10pp * df$cases   
+df$che25 <- df$che25pp * df$cases   
+
 
 ###################################
 # 3. Define customizable LPP/optimization function
 ###################################
 find_optimal_package <- function(data.frame, # data on interventions 
                                  objective_input = "nethealth", # what is being maximised
-                                 cet_input = 161, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
+                                 weight_dalys_per_1_che = 1, # if objective input is both DALYs and CHE
+                                 cet_input = 2612, # chosen cost effectiveness threshold (only relevant if objective_input = "nethealth")
                                  drug_budget_input, # size of consumables budget
                                  drug_budget.scale = 1,  # use this to scale consumables budget up or down (1 -> no scaling applied)
                                  hr.scale,  # use this to scale health workforce size up or down individually fo each cadre (1 -> no scaling applied)
@@ -99,6 +117,9 @@ find_optimal_package <- function(data.frame, # data on interventions
   drugcost <<- data.frame$drugcost #  Per person cost of drugs and commodities
   maxcoverage <<- data.frame$maxcoverage # Maximum possible coverage based on OneHealth Tool
   cases <<- data.frame$cases # Total number of cases based on OneHealth Tool
+  incremcases <<- data.frame$incremcases # Number of incremental cases treated through inclusion in the HBP (over an above those who would get treated anyway through OOP)
+  che10 <<- data.frame$che10 # Number of CHE cases created by exclusion of intervention (assume CHE is OOP > 10% of HH income)
+  che25 <<- data.frame$che25 #  Number of CHE cases created by exclusion of intervention (assume CHE is OOP > 25% of HH income)
   fullcost <<- data.frame$fullcost # Full cost per patient based on CE evidence 
   hrneed <<- as.data.frame(apply(data.frame[,c(12:32)],2,as.numeric)) # Number of minutes of health worker time requires per intervention per person
   
@@ -110,19 +131,37 @@ find_optimal_package <- function(data.frame, # data on interventions
   
   # Objective - maximize DALYs or Net Health per person X Total number of cases X Coverage
   #****************************************************
+  ## For health outcomes, government pays the full cost of including an intervention i.e. cost per patient * total cases but only gains the DALYs
+  ## of the incremental cases who didn't utilise intervention if excluded i.e. DALYs per patient * incremental cases.
+  ## For CHE, the CHE averted per patient are calculated with full case numbers.
   # Define net health
   cet <- cet_input
-  nethealth <<- dalys - fullcost/cet
+  nethealth <<- (dalys * incremcases) - (fullcost * cases) / cet
+  dalys <<- dalys * incremcases
+  che10 <<- che10
+  che25 <<- che25
   
-  # Define objective
-  if (objective_input == 'nethealth'){
-    objective <<- nethealth * cases
+  # Objective mapping
+  objective_map <<- list(
+    nethealth = nethealth,
+    dalys = dalys,
+    che10 = che10,
+    che25 = che25)
+  
+  # if multiple objectives are included
+  if (objective_input %in% c("dalys_and_frp_che10", "dalys_and_frp_che25")) {
+    k <- weight_dalys_per_1_che
+    dalys_and_frp_che10 <<- dalys + che10 * k
+    dalys_and_frp_che25 <<- dalys + che25 * k
+    objective_map[["dalys_and_frp_che10"]] <<- dalys_and_frp_che10
+    objective_map[["dalys_and_frp_che25"]] <<- dalys_and_frp_che25
   }
-  else if (objective_input == 'dalys'){
-    objective <<- dalys * cases
-  }
-  else{
-    print('ERROR: objective_input can take values dalys or nethealth')	
+  
+  # Assign objective
+  if (objective_input %in% names(objective_map)) {
+    objective <<- objective_map[[objective_input]]
+  } else {
+    stop("ERROR: objective_input must be one of ", paste(names(objective_map), collapse = ", "))
   }
   
   # Constraints - 1. Drug Budget, 2. HR Requirements
@@ -138,7 +177,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   hr_minutes_need <- hrneed * cases[row(hrneed)] # HR minutes required to deliver intervention to all cases in need
   
   # Update HR constraints so that nurses, pharmacists, medical officers, etc. represent joint constraints because the HR data
-  # found for Uganda was not detailed enough 
+  # found for Eswatini was not detailed enough 
   colnames(hr_minutes_need)
   medstaff <- hr_minutes_need[,1] + hr_minutes_need[,2]   # Medical officer + Clinical officer
   nursingstaff <- hr_minutes_need[,3] + hr_minutes_need[,4] + hr_minutes_need[,5] # Medical assistant + Nurse officer + Nurse midwife
@@ -219,14 +258,14 @@ find_optimal_package <- function(data.frame, # data on interventions
   #--------------------------------------
   cons_hr <<- as.matrix(cons_hr)
   cons_hr.limit <<- as.matrix(cons_hr.limit)
-  dim(cons_hr) # = 111 X 8
+  dim(cons_hr) # = N X 8
   dim(cons_hr.limit)  # = 1 X 8
   
   # 2. Drug
   #--------------------------------------
   cons_drug <<-as.matrix(cons_drug)
   cons_drug.limit <<- as.matrix(cons_drug.limit)
-  dim(cons_drug) # = 111 X 1
+  dim(cons_drug) # = N X 1
   dim(cons_drug.limit) # = 1 X 1
   
   # 3. Max coverage
@@ -235,18 +274,16 @@ find_optimal_package <- function(data.frame, # data on interventions
   cons.feascov <<- diag(x = cases, n, n)
   if (use_feasiblecov_constraint == 1){
     cons.feascov.limit <<- as.matrix(pmin(maxcoverage * feascov_scale * cases, cases)) # changed the constraint on 12May (multiplied by cases)
-  }
-  else if (use_feasiblecov_constraint == 0){
+  } else if (use_feasiblecov_constraint == 0){
     cons.feascov.limit <<- as.matrix(cases) # changed the constraint on 12May (multiplied by cases)
-  }
-  else{
+  } else{
     print('ERROR: use_feasiblecov_constraint can take values 0 or 1')
   }  
   
   nonneg.lim <<- as.matrix(rep(0,n))
-  dim(cons.feascov) # 111 X 111
-  dim(cons.feascov.limit) # 111 X 1
-  dim(nonneg.lim) # 111 X 1
+  dim(cons.feascov) # N X N
+  dim(cons.feascov.limit) # N X 1
+  dim(nonneg.lim) # N X 1
   
   # 4. Compulsory interventions
   #--------------------------------------
@@ -259,12 +296,10 @@ find_optimal_package <- function(data.frame, # data on interventions
       b <- data.frame$intervention[a]
       #print(paste("Compulsory intervention: ",b, "; Code: ", compulsory_interventions[i], "; Number ",a ))
       cons_compulsory[i,a] <<- cases[a]
-      # CHECK THIS CHANGE MADE on 26Aug21
       cons_compulsory.limit[i] <<- min(cases[a] * maxcoverage[a] * feascov_scale * compcov_scale, cases[a]) # changed on 12May to maxcoverage because cons.feascov.limit is now maximum number of cases rather than maximum % coverage 
     }
     dim(cons_compulsory)
-  }
-  else if(length(compulsory_interventions) == 0){
+  } else if(length(compulsory_interventions) == 0){
     comp.count<- 1
     cons_compulsory <<- matrix(0L, 1, ncol = n)
     cons_compulsory.limit <<- matrix(0L, 1, ncol = 1)
@@ -292,13 +327,13 @@ find_optimal_package <- function(data.frame, # data on interventions
       nested_intervention_location <- which(data.frame$intcode == complements_nested[[i]][2])
       nested_intervention <- data.frame$intervention[nested_intervention_location]
       print(paste("Base intervention:", base_intervention , cases_base, "Intervention: ", nested_intervention, "; Code: ", complements_nested[[1]][2] , "; (Proportion: ",as.numeric(complements_nested[[i]][3]), ")"))
-      cons_complements[counter,base] <<- cases_base * as.numeric(complements_nested[[i]][3])
+      cons_complements[counter,base] <- cases_base * as.numeric(complements_nested[[i]][3])
       cons_complements[counter,nested_intervention_location] <<- - cases[nested_intervention_location]
       
       counter = counter + 1
     } 
     cons_complements <<- t(cons_complements)
-   }else{cons_complements <<- t(cons_complements)}
+  } else{cons_complements <<- t(cons_complements)}
   
   # 6. Substitute interventions
   #--------------------------------------
@@ -349,8 +384,7 @@ find_optimal_package <- function(data.frame, # data on interventions
   # Update the constraint matrices if task shifting is allowed
   if (task_shifting_pharm == 0){
     print("No task shifting of pharmaceutical tasks")
-  }
-  else if (task_shifting_pharm == 1){
+  }else if (task_shifting_pharm == 1){
     #1. Objective
     objective <<- duplicate_matrix_horizontally(reps, as.matrix(objective))
     #2. Drug budget constraint (cons_drug.limit does not need to be changed)
@@ -363,8 +397,7 @@ find_optimal_package <- function(data.frame, # data on interventions
     cons_complements <<- duplicate_matrix_horizontally(reps,as.matrix(cons_complements))
     #6. Substitutes
     cons_substitutes <<- duplicate_matrix_horizontally(reps,as.matrix(cons_substitutes))
-  }
-  else{
+  } else{
     print('ERROR: task_shifting_pharm can take values 0 or 1')
   }
   
@@ -376,16 +409,16 @@ find_optimal_package <- function(data.frame, # data on interventions
   print(paste("Dimension - Compulsory interventions constraint:", paste( unlist(dim(t(cons_compulsory))), collapse=' ')))
   print(paste("Dimension - Substitutes constraint:", paste( unlist(dim(t(cons_substitutes))), collapse=' ')))
   print(paste("Dimension - Complements constraint:", paste( unlist(dim(t(cons_complements))), collapse=' ')))
-  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), t(cons_complements)) # LHS
+  cons.mat <- rbind(t(cons_drug), t(cons_hr), t(cons.feascov), t(cons.feascov), t(cons_compulsory), t(cons_substitutes), cons_complements) # LHS
   cons.mat.limit <- rbind(cons_drug.limit, t(cons_hr.limit), cons.feascov.limit, nonneg.lim, cons_compulsory.limit, cons_substitutes.limit, cons_complements.limit) # RHS
   print(paste("Dimension of LHS", paste( unlist(dim(cons.mat)), collapse=' '))) # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X N
   print(paste("Dimension of RHS", paste( unlist(dim(cons.mat.limit)), collapse=' ')))  # (1+ 8 + N + N + 1 + No. of substitutes + No. of nested complements) X 1
   
   # Direction of relationship
-  cons.dir <- rep("<=",1+8+n)
-  cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count))
-  cons.dir <- c(cons.dir,rep("<=",length(substitutes)))
-  cons.dir <- c(cons.dir, rep(">=", length(complements_nested)))
+  cons.dir <- rep("<=",1+8+n) # Drug + HR + Max coverage
+  cons.dir <- c(cons.dir,rep(">=",n), rep(">=",comp.count)) # Nonneg limit, Compulsory interventions
+  cons.dir <- c(cons.dir,rep("<=",length(substitutes))) # Substitutes
+  cons.dir <- c(cons.dir, rep(">=", length(complements_nested))) # Complements
   length(cons.dir)
   length(cons.dir) = dim(cons.mat.limit)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
@@ -419,10 +452,20 @@ find_optimal_package <- function(data.frame, # data on interventions
   intervention.count <<- sum(solution != 0)
   
   # DALY burden averted as a % of avertible DALY burden
-  solution_dalysaverted <<- solution * cases * dalys # Dalys averted per intervention
-  dalysavertible = cases * dalys # Total DALYs that can be averted at maximum coverage
+  solution_dalysaverted <<- solution * incremcases * dalys # Incremental DALYs averted per intervention
+  dalysavertible = incremcases * dalys # Total incremental DALYs that can be averted at maximum coverage
   dalys_averted <<- round(sum(unlist(lapply(solution_dalysaverted, sum))),2)
   dalys_averted.prop <<- sum(unlist(lapply(solution_dalysaverted, sum)))/sum(unlist(lapply(dalysavertible, sum)))
+  
+  # CHE cases averted for each CHE threshold (10% & 25%) - use cases (not incremental cases) as this is how che cases averted per patient was calculated
+  solution_che10averted <<- solution  * che10 # if the solution is 10% of cases covered by HBP, then 10% of CHE cases would be averted
+  solution_che25averted <<- solution * che25   
+  che10avertible = che10 
+  che25avertible = che25 
+  che10_averted <<- round(sum(unlist(lapply(solution_che10averted, sum))),2)
+  che25_averted <<- round(sum(unlist(lapply(solution_che25averted, sum))),2)
+  che10_averted.prop <<- sum(unlist(lapply(solution_che10averted, sum)))/sum(unlist(lapply(che10avertible, sum)))
+  che25_averted.prop <<- sum(unlist(lapply(solution_che25averted, sum)))/sum(unlist(lapply(che25avertible, sum)))
   
   # Drugs and Commodities cost (% of budget available)
   solution_drugexp <<- solution*cons_drug[1:length(dalys),] # Total drug budget required per intervention for the  the optimal solution
@@ -459,7 +502,11 @@ find_optimal_package <- function(data.frame, # data on interventions
                   "Number of interventions in the optimal package" = intervention.count,
                   "Net DALYs averted" = solution.class$objval,
                   "Total DALYs averted" = sum(unlist(lapply(solution_dalysaverted, sum))), 
-                  "Proportion of DALY burden averted" = dalys_averted.prop , 
+                  "Proportion of DALY burden averted" = dalys_averted.prop, 
+                  "Total CHE cases (10% threshold) averted"= sum(unlist(lapply(solution_che10averted, sum))),
+                  "Proportion of CHE cases (10% threshold) averted" = che10_averted.prop,
+                  "Total CHE cases (25% threshold) averted"= sum(unlist(lapply(solution_che25averted, sum))), 
+                  "Proportion of CHE cases (25% threshold) averted" = che25_averted.prop,
                   "Proportion of drug budget used" = drug_exp.prop, 
                   "Proportion of HR capacity used by cadre" = hruse.prop,
                   "CET based on solution" =  cet_soln
@@ -473,7 +520,7 @@ find_optimal_package <- function(data.frame, # data on interventions
 # Note that in order to run this function, find_optimal_package needs to be run first
 gen_resourceuse_graphs <- function(plot_title, file_name){
   #pal <- viridisLite::viridis(10) # Create a viridis palette for the graph
-  pal <- rainbow(10)
+  pal <- rainbow(11)
   
   ## Generate matrix representing HR and Drug budget use by the HBP solution run above
   #--------------------------------------------------------------------------------------
@@ -484,7 +531,7 @@ gen_resourceuse_graphs <- function(plot_title, file_name){
   
   # Drug budget Use
   data_drug <- as.matrix(solution_drugexp)/cons_drug.limit_base
-
+  
   length(data_drug) = dim(data_hr)[1] # Assert that the length of the directions list is the same as that of the constraints matrix
   
   # Combine all resource use matrices into one matrix
